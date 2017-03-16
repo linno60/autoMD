@@ -14,53 +14,41 @@ class PdbIndex :
     """
     Input the reisude number sequence, then out put the required index atoms
     """
+    def __init__(self, ) :
+        pass
 
-    def __init__(self, inpdb, chain, atomtype, residueNdx) :
-        self.chain = chain
-        self.inpdb = inpdb
-        self.atomtype = atomtype
-        self.residueNdx = residueNdx
-
-    def res_index(self, atomList, atomtype="", dihedraltype="None"):
+    def res_index(self,inpdb, chain, atomtype, residueNdx, atomList, dihedraltype="None"):
 
         #atomInfor = {}
         indexlist = []
-        if len(self.residueNdx) == 2 :
-            residueNdx = range(self.residueNdx[0], self.residueNdx[1]+1)
-        elif len(self.residueNdx) == 1 :
-            residueNdx = range(self.residueNdx[0], self.residueNdx[0]+1)
+        if len(residueNdx) == 2 :
+            residueNdx = range(residueNdx[0], residueNdx[1]+1)
+        elif len(residueNdx) == 1 :
+            residueNdx = range(residueNdx[0], residueNdx[0]+1)
         else :
             print("Error!! No residue index provided. ")
             residueNdx = []
 
         if atomtype == "dihedral" :
-            # format of indexlist : [ [1, 5, 7, 9 ], ]
-            # residueNdx = [ 5, 6, 7, 8 ]
-            #print "dihedral here"
             indexlist = []
-            #print residueNdx
             for resndx in residueNdx :
-                #print "PHI here"
-                #define index for phi angle C N CA C
                 phitype = ['C', 'N', 'CA', 'C']
                 phipair = [-1, -1, -1, -1]
                 phindxadd = [-1, 0, 0, 0]
                 for i in range(4) :
-                    with open(self.inpdb) as lines :
+                    with open(inpdb) as lines :
                         for s in lines :
-                            if len(s.split()) > 1 and s.split()[0] == "ATOM" and s[21] == self.chain :
+                            if len(s.split()) > 1 and s.split()[0] == "ATOM" and s[21] == chain :
                                 if int(s[22:26].strip()) == resndx + phindxadd[i] and s[12:16].strip() == phitype[i] :
                                     phipair[i] = int(s.split()[1])
-                                    #print int(s.split()[1])
-                                    #break
 
                 psitype = ['N', 'CA', 'C', 'N']
                 psindxadd = [ 0, 0, 0, 1]
                 psipair = [-1, -1, -1, -1]
                 for i in range(4):
-                    with open(self.inpdb) as lines:
+                    with open(inpdb) as lines:
                         for s in lines:
-                            if len(s.split()) > 1 and s.split()[0] == "ATOM" and s[21] == self.chain:
+                            if len(s.split()) > 1 and s.split()[0] == "ATOM" and s[21] == chain:
                                 if int(s[22:26].strip()) == resndx + psindxadd[i] and s[12:16].strip() == psitype[i]:
                                     psipair[i] = int(s.split()[1])
                                     #break
@@ -72,10 +60,10 @@ class PdbIndex :
 
         else :
 
-            with open(self.inpdb) as lines :
+            with open(inpdb) as lines :
                 for s in lines :
-                    if len(s.split()) > 1 and s.split()[0] == "ATOM" and s[21] == self.chain :
-                        if int(s[22:26].strip()) in self.residueNdx :
+                    if len(s.split()) > 1 and s.split()[0] == "ATOM" and s[21] == chain :
+                        if int(s[22:26].strip()) in residueNdx :
                             if atomtype == "non-hydrogen" :
                                 if s[13] != "H" and s.split()[2][0] != "H" and s.split()[-1] != "H" :
                                     indexlist.append(s.split()[1])
@@ -93,35 +81,35 @@ class PdbIndex :
                     else:
                         pass
 
-        return indexlist
+        return(indexlist)
 
-    def atomList(self):
+    def atomList(self, atomtype):
         atomList = []
         atomtype = ""
-        if "mainchain" in self.atomtype or "Main" in self.atomtype or "main" in self.atomtype :
+        if "mainchain" in atomtype or "Main" in atomtype or "main" in atomtype :
             atomList = ['CA', 'N', 'C', 'O']
 
-        elif "CA" in self.atomtype or "ca" in self.atomtype or "Ca" in self.atomtype or "alpha" in self.atomtype :
+        elif "CA" in atomtype or "ca" in atomtype or "Ca" in atomtype or "alpha" in atomtype :
             atomList = ['CA']
 
-        elif "backbone" in self.atomtype or "Back" in self.atomtype or "bone" in self.atomtype :
+        elif "backbone" in atomtype or "Back" in atomtype or "bone" in atomtype :
             atomList = ['CA', 'N']
 
-        elif "all" in self.atomtype :
+        elif "all" in atomtype :
             atomtype = "all-atom"
 
-        elif "no hy" in self.atomtype or "non-hy" in self.atomtype :
+        elif "no hy" in atomtype or "non-hy" in atomtype :
             atomtype = "non-hydrogen"
 
-        elif "side" in self.atomtype or "Sidechain" in self.atomtype or "sidechain" in self.atomtype :
+        elif "side" in atomtype or "Sidechain" in atomtype or "sidechain" in atomtype :
             atomtype = "side-chain"
 
-        elif "PSI" in self.atomtype or "PHI" in self.atomtype or "phi" in self.atomtype or 'psi' in self.atomtype :
+        elif "PSI" in atomtype or "PHI" in atomtype or "phi" in atomtype or 'psi' in atomtype :
             atomtype = "dihedral"
 
         return  atomList, atomtype
 
-    def genGMXIndex(self, atomNdxList, groupName,outputNdxFile, append=True):
+    def atomList2File(self, atomNdxList, groupName, outputNdxFile, append=True):
         if append :
             tofile = open(outputNdxFile, 'a')
         else :
@@ -136,7 +124,117 @@ class PdbIndex :
                 tofile.write('  \n')
 
         tofile.close()
+        return(1)
 
+    def arguements(self) :
+        d = '''
+        ################################################################
+        # Generate GMX Index from a PDB file
+        # Generate POSRES file for a PDB or Gro File
+        # Contact  LZHENG002@E.NTU.EDU.SG
+        # Version  2.0
+        ################################################################
+
+        Usage examples
+
+        Generate backbone index for residue 1 to 1000 within Chain B
+        python PdbIndex.py -res 1 100 -at backbone -chain B -out index.ndx
+
+        Generate all atom index for residue 78 to 100
+        python PdbIndex.py -inp S_1.pdb -out index.ndx -at allatom -chain ' ' -res 78 100
+
+        Generate dihedral (PHI only) quadroplex index
+        python PdbIndex.py -inp S_1.pdb -out index.ndx -at dihedral -chain ' ' -res 78 100 -dihedral PHI
+
+        '''
+
+        parser = argparse.ArgumentParser(description=d, formatter_class=RawTextHelpFormatter)
+        #parser.add_argument('-h','--help', help="Show this help information. \n")
+        parser.add_argument('-pdb', '--pdbfile',type=str, default='input.pdb',
+                            help="Input PDB file for generating Index. ")
+        parser.add_argument('-out', '--output',type=str, default='output.ndx',
+                            help="Output Index file including atoms sequence number.\n"
+                                 "Default name is output.ndx \n")
+        parser.add_argument('-at', '--atomtype',type=str, default='allatom',
+                            help="Selected atom type for generating index. \n"
+                                 "Options including: allatom, mainchain, \n"
+                                 "non-hydrogen, c-alpha, backbone, sidechain, dihedral\n"
+                                 "Default choice is: allatom \n")
+        parser.add_argument('-chain', '--chainId',type=str, default="A",
+                            help="Protein chain identifier. Default chain ID is A. \n")
+        parser.add_argument('-res', '--residueRange',type=int, nargs='+',
+                            help="Residue sequence number for index generating. \n"
+                                 "Example, -res 1 100, generateing atom index within \n"
+                                 "residues 1 to 100. Default is None.")
+        parser.add_argument('-posres', '--positionRestraint',default=False,
+                            help="Generate a postion restraint file for selected index.\n"
+                                 "Default name is posres.itp \n")
+        parser.add_argument('-dihedral', '--dihedralType',default="NA",
+                            help="Whether generate dihedral angles index (quadruplex).\n"
+                                 "Phi and Psi are considered. Optional choices are: \n"
+                                 "PHI, PSI, PHI_PSI, or NA. Default is NA. \n")
+
+        args = parser.parse_known_args()
+
+        # decide to print help message
+        if len(sys.argv) < 2:
+            # no enough arguements, exit now
+            parser.print_help()
+            print("\nYou chose non of the arguement!\nDo nothing and exit now!\n")
+            sys.exit(1)
+
+        return(args)
+
+    def genGMXIndex(self):
+        args = self.arguements()
+
+        if len(args.res) == 2:
+            residueNdx = range(args.res[0], args.res[-1] + 1)
+        elif len(args.res) == 1:
+            residueNdx = range(args.res[0], args.res[0] + 1)
+        elif len(args.res) > 2:
+            residueNdx = args.res
+        else:
+            print "\nNumber of residue id is not correct. \nExit Now. "
+            sys.exit(1)
+
+        if args.dihedral != "NA":
+
+            atomlist, atomtype = self.atomList(args.dihedral)
+        else :
+            atomlist, atomtype = self.atomList(args.at)
+        ## generate index
+        atomndx = self.res_index(args.pdb, args.chain,
+                                 residueNdx= args.res, atomList=atomlist,
+                                 atomtype=atomtype, dihedraltype=args.dihedral
+                                 )
+
+        tofile = open(args.out, 'w')
+        tofile.write('[ %s_%d ] \n' % (args.chain, args.res[0]))
+
+        if atomtype == "dihedral":
+            for index in atomndx:
+                for i in range(4):
+                    tofile.write("%5d " % index[i])
+                tofile.write("  \n")
+
+        else:
+            i = 0
+            for atom in atomndx:
+                i += 1
+                tofile.write('%4s ' % atom)
+                if i % 15 == 0:
+                    tofile.write('  \n')
+            tofile.write(" \n")
+            tofile.close()
+
+            if args.posres :
+                with open('posres.itp', 'w') as tofile :
+                    tofile.write("[ position_restraints ] \n; ai  funct  fcx    fcy    fcz  \n")
+                    for atom in atomndx:
+                        tofile.write("%12d  1  1000  1000  1000  \n" % int(atom))
+
+        print("\nGenerating Index File Completed!")
 
 class RewritePDB :
     def __init__(self, filename):
@@ -201,7 +299,8 @@ class GenerateTop :
         # check AMBERHOME PATH
         AMBERHOME = sp.check_output("echo $AMBERHOME", shell=True)
         AMBERHOME = AMBERHOME[:-1] + "/"
-        print "Here is amber home path: " + AMBERHOME + " \n\n"
+        if verbose :
+            print("Here is amber home path: " + AMBERHOME + " \n\n")
 
         # multiple FF supoorted here
         leapin = open("leapIn.in", 'w')
@@ -222,14 +321,19 @@ class GenerateTop :
                 sys.exit(1)
 
         # load amber frcmod and prep files
-        if frcmodFile != "" and frcmodFile != "NA":
+        if frcmodFile :
             leapin.write("loadamberparams  " + frcmodFile + "  \n")
-        if prepfile != "" and prepfile != "NA":
+        if prepfile :
             leapin.write("loadamberprep " + prepfile + "  \n")
 
         # prepare PDB file and load it
         if ".pdb" in PDBFile:
             leapin.write("pdb = loadPDB  " + PDBFile + "  \n")
+        elif ".mol2" in PDBFile :
+            # convert the mol2 file to pdb file using obabel
+            job = sp.Popen("obabel %s -O %s"%(PDBFile, PDBFile[:-4]+"pdb"), shell=True)
+            job.communicate()
+            leapin.write("pdb = loadpdb " + PDBFile[:-4]+"pdb" + "  \n")
         elif len(PDBFile) >= 2:
             leapin.write("pdb = sequence{ ")
             for item in PDBFile:
@@ -248,8 +352,8 @@ class GenerateTop :
                 print "\nAdd ions not successful!\n"
         else:
             "\nNot adding any ions!\n"
-        if solveBox != "NA" and solveBox != "None" and solveBox :
-            if boxEdge > 0:
+        if solveBox :
+            if boxEdge :
                 leapin.write("solvatebox pdb %s %f \n" % (solveBox, boxEdge))
             else:
                 print "\nBOX size not correctly set.\nExit Now!\n"
@@ -260,12 +364,16 @@ class GenerateTop :
         # check object
         leapin.write("check pdb \n")
         leapin.write("savepdb pdb %s  \n" % (outputName + ".pdb"))
+        leapin.write("saveoff pdb %s  \n"%(outputName+".lib"))
         leapin.write("saveamberparm pdb %s.prmtop %s.prmcrd \n" % (outputName, outputName))
         leapin.write("quit \n")
         leapin.close()
 
+        if verbose :
+            print("Generating a leap input file for tleap topology processing.")
+
         # run tleap
-        out = sp.Popen("%s/bin/tleap -f leapIn.in  \n" % AMBERHOME, shell=True)
+        out = sp.check_output("%s/bin/tleap -f leapIn.in  \n" % AMBERHOME, shell=True)
         if verbose :
             print(out)
 
@@ -277,7 +385,13 @@ class GenerateTop :
         if verbose :
             print(out)
             print("GMX topology created")
-        return 1
+        return(1)
+
+    def runObabel(self, obabelexe, input, output, verbose=True):
+        status = sp.check_output("%s %s -O %s "%(obabelexe, input, output))
+        if verbose :
+            print(status)
+        return(1)
 
     def removeMolInfor(self, outputName, topFileName=None, verbose=True):
         # generate itp file from gmx.top file
@@ -304,6 +418,47 @@ class GenerateTop :
             print("ITP file for %s generated! " % outputName)
         return(1)
 
+    def runAntechamber(self, netcharge, antechamber="sample_antechamber.sh"):
+        if not os.path.exists(antechamber) :
+            with open(antechamber, 'w') as tofile :
+                content = '''
+if [ $# -ne 2 ]; then
+echo "Usage: input RED III.1  output, charge & spin & residuNAME read from Mol2"
+echo "Format: file_in(Mol2); atom_type(gaff or amber)"
+exit
+fi
+
+antechamber -i $1 -fi mol2 -o prep.$2 -fo prepi -at $2 -pf y -s 2
+#antechamber -i $1 -fi mol2 -o prep.$2 -fo prepi -at $2 -pf y -s 2 -c resp
+parmchk -i prep.$2 -f prepi -o frcmod.$2 -a Y
+grep need frcmod.$2
+
+if test -f leap.in; then
+   rm leap.in
+fi
+
+echo "============================================="
+echo "dmfff = loadamberparams frcmod.$2" >> leap.in
+echo "loadamberprep prep.$2" >> leap.in
+
+echo "prepared run_parm.sh for tleap"
+echo "tleap -s -f ${AMBERHOME}dat/leap/cmd/leaprc.ff99 -f leap.in"
+echo "tleap -s -f ${AMBERHOME}dat/leap/cmd/leaprc.gaff -f leap.in"
+echo "general AMBER : leaprc.gaff"
+echo "AMBER : leaprc.ff90"
+                '''
+                tofile.write(content)
+        # run antechamber here, may first generate a sh script and then wrap it up
+        tofile = open("antechamber.sh", 'w')
+        with open(antechamber) as lines:
+            for s in lines:
+                if len(s.split()) > 0 and s.split()[0] == "antechamber":
+                    tofile.write(
+                        "antechamber -i $1 -fi mol2 -o prep.$2 -fo prepi -at $2 -pf y -s 2 -c bcc -nc %d \n" % netcharge)
+                else:
+                    tofile.write(s)
+        return("antechamber.sh")
+
     def arguments(self):
 
         # go current directory
@@ -322,47 +477,60 @@ class GenerateTop :
             Provide a PDB file, or sometimes prep and frcmod files, itp and prmtop file will be given.
             Copyright @ Liangzhen Zheng, contact astrozheng@gmail.com for any technique support. \n
             Examples:
-              python gmxTopBuilder -h
-              python gmxTopBuilder -pdb your.pdb -out yourpdb -ff AMBER14
-              python gmxTopBuilder -aaseq ACE ALA CYS ALA HIS ASN NME -ff AMBER99SBildn -out peptide
-              python gmxTopBuilder -pdb lig.pdb -out lig -ff gaff -prep amber.prep.lig -frcmod frcmod.log
-              python gmxTopBuilder -pdb cplx.pdb -out cplx_box -ff gaff ildn -bt TIP3PBOX -d 1.2 -prep amber.prep.lig -frcmod frcmod.log
+              python autoMD.py gentop -h
+              python autoMD.py gentop -inp your.pdb -out yourpdb -ff AMBER14
+              python autoMD.py gentop -aaseq ACE ALA CYS ALA HIS ASN NME -ff AMBER99SBildn -out peptide
+              python autoMD.py gentop -inp lig.pdb -out lig -ff gaff -prep amber.prep.lig -frcmod frcmod.log
+              python autoMD.py gentop -inp cplx.pdb -out cplx_box -ff gaff ildn
+                                      -bt TIP3PBOX -d 1.2 -prep amber.prep.lig -frcmod frcmod.log
+              python autoMD.py gentop -inp ligand.mol2 -resp True -nt 0 -out LIG
             '''
             parser = argparse.ArgumentParser(description=d, formatter_class=RawTextHelpFormatter)
-            parser.add_argument("-pdb", type=str, default=None,
-                                help="The PDB file for topology generating. Default is NULL\n")
+            parser.add_argument("-inp", type=str, default=None,
+                                help="The PDB file or a mol2 file for topology generating. Default is None\n")
             parser.add_argument("-prep", type=str, default="amberff.prep",
-                                help="Prep file stored coordinates and charges.\n")
+                                help="Prep file (amber format) stored coordinates and charges.\n"
+                                     "Default is None.")
             parser.add_argument("-frcmod", type=str, default="frcmod",
-                                help="The additional parameters, stored in frcmod file.\n")
+                                help="The additional parameters, stored in frcmod file (Amber format).\n")
             parser.add_argument("-out", type=str, default="OUT", help="The output name. Default is OUT.\n")
             parser.add_argument("-ion", type=str, nargs="+", default=["X+", ],
-                                help="The ions to be added to the system. Mutiple Ions supported. "
+                                help="The ions to be added to the system. Mutiple Ions supported. \n"
                                      "Options are Na+, Cl-\n"
                                      "Default is X+. \n")
             parser.add_argument("-nion", type=int, nargs="+", default=[-1, ],
                                 help="Number of ions to be added. Default is -1. \n"
                                      "Number of args must be the same as -ion. \n")
-            parser.add_argument("-bt", type=str, default="TIP3PBOX",
+            parser.add_argument("-bt", type=str, default=None,
                                 help="Box type, ff you wish to solvate the mol in water box, you should\n"
-                                     "provide an option: NA, TIP3PBOX, TIP4PEW, or TIP5PBOX."
+                                     "provide an option: NA, TIP3PBOX, TIP4PEW, or TIP5PBOX. \n"
                                      "Default choice is TIP3PBOX. \n")
-            parser.add_argument("-size", type=float, default=-12.0,
-                                help="The size of your solvation box. Default is -12.0 angstrom. \n")
+            parser.add_argument("-size", type=float, default=0,
+                                help="The size of your solvation box. Default is 0 angstrom. \n")
             parser.add_argument("-ff", type=str, nargs='+', default=["AMBER99SB", ],
                                 help="The force field for simulation. Multiple force filed files were supported.\n"
-                                     " Options including: 99SB, 99SBildn, AMBER14, gaff\n"
+                                     "Options including: 99SB, 99SBildn, AMBER14, gaff\n"
                                      "or use leaprc.xxx files here. Default is AMBER99SB. \n")
             parser.add_argument("-aaseq", type=str, nargs='+', default=None,
                                 help="Amino acid sequences in case no PDB file provide.\n"
                                      "Default is None. It is an optional argument.\n")
-            args = parser.parse_args()
-            if len(sys.argv) < 2:
+            parser.add_argument("-resp", default=False, type=bool,
+                                help="If it is a small molecule, whose atomic charges \n"
+                                     "not defined, neither the bonding angles, we could \n"
+                                     "use RESP with bcc AM1 to determine charges and \n"
+                                     "prepare parameters. Options: True, False. \n"
+                                     "Defualt is False. \n")
+            parser.add_argument("-nc", default=0, type=int,
+                                help="Net charge. This argument only works with \n"
+                                     "the -resp argument. Default is 0. \n")
+
+            args, unknown = parser.parse_known_args()
+            if len(sys.argv) < 3 :
                 parser.print_help()
                 print("Number of arguments are not correct! Exit Now!")
                 sys.exit(1)
 
-            return (args)
+            return(args)
 
 class SummaryPDB :
     def __init__(self, pdbfile, aminoLibFile):
@@ -726,15 +894,16 @@ class AutoRunMD :
 
     def runMD(self, MDPFile, groFile, outTprFile, mdpOptions,
               sampleScript='sample_qsub.sh',
-              qsub=False,
-              np=4,
-              index="index.ndx"
+              qsub=False, np=4,
+              index="index.ndx",
               ):
 
         # prepare mdp file for MD
         current_mdp = MDPFile
         if len(mdpOptions.keys()) :
-            self.modifyMDP(inputMDPFile=MDPFile, outputMDPFile="modified_"+MDPFile, parameters=mdpOptions)
+            self.modifyMDP(inputMDPFile=MDPFile,
+                           outputMDPFile="modified_"+MDPFile,
+                           parameters=mdpOptions)
             current_mdp = "modified_"+MDPFile
 
         # prepare tpr file for md
@@ -758,28 +927,81 @@ class AutoRunMD :
 
         return(outTprFile[-4:]+".gro")
 
+def runGenTop() :
+    top = GenerateTop()
+    args = top.arguments()
+
+    try :
+        os.environ["AMBERHOME"] = "/home/liangzhen/software/amber14/"
+    except :
+        os.system("export AMBERHOME=/home/liangzhen/software/amber14/")
+
+    # define the input coordinates information
+    if args.aaseq:
+        structure = args.aaseq
+    elif args.inp:
+        structure = args.inp
+    else:
+        structure = ''
+        print('Error: No input structure defined.\n Exit Now!')
+        sys.exit(0)
+
+    if not args.resp:
+
+        top.gmxTopBuilder(args.frcmod, args.prep,
+                          structure, args.out,
+                          args.ion, args.nion,
+                          args.bt, args.size,
+                          args.ff)
+    else:
+        # prepare resp charges for small ligand with antechamber
+        sh = top.runAntechamber(args.nc)
+
+        try:
+            # set env for AMBERHOME
+            os.environ["AMBERHOME"] = "/home/liangzhen/software/amber14/"
+            job = sp.Popen("sh %s %s %s" % (sh, args.inp, args.out), shell=True)
+            job.communicate()
+        except:
+            print("Antechamber generateing RESP and atomic parameters error! \n "
+                  "Double check your input structure.")
+            sys.exit(1)
+
+        top.gmxTopBuilder("frcmod." + args.out,
+                          "prep." + args.out,
+                          structure, args.out,
+                          args.ion, args.nion,
+                          args.bt, args.size,
+                          args.ff)
+
+    if args.ion[0] == "X+" or args.bt == "NA":
+        # print "ITP file created!"
+        top.removeMolInfor(args.out)
+
 if __name__ == "__main__" :
+    # cd to PWD
+    os.chdir(os.getcwd())
 
-    if str(sys.argv[1]) == "gentop" :
+    if len(sys.argv) <= 2 :
+        help_information = '''
+        The tool is used for automating Gromacs based MD simulation.
+        Several independent tools are provided.
 
-        top = GenerateTop()
-        args = top.arguments()
+        Separated tools including index, gentop, autoMD etc.
 
-        if args.aaseq == None or argparse == "None" or argparse == "NA":
-            top.gmxTopBuilder(args.frcmod, args.prep, args.pdb, args.out, args.ion, args.nion, args.bt, args.size,
-                               args.ff)
-        else:
-            top.gmxTopBuilder(args.frcmod, args.prep, args.aaseq, args.out, args.ion, args.nion, args.bt, args.size,
-                               args.ff)
-        if args.ion[0] != "X+" or args.bt != "NA":
-            pass
-        else:
-            top.removeMolInfor(args.out)
-            # print "ITP file created!"
+        Usage:
 
-
-
-
-
-
-
+        python autoMD.py -h
+        python autoMD.py gentop -h
+        python autoMD.py index -h
+        '''
+        print(help_information)
+        sys.exit(1)
+    else :
+        if str(sys.argv[1]) == "index" :
+            print("Show help message: ")
+            index = PdbIndex()
+            index.genGMXIndex()
+        #if 1 :
+        elif str(sys.argv[1]) == "gentop" :
+            runGenTop()

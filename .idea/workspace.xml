@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="0fd3dbe6-7724-4371-b2f5-01ef99307d5c" name="Default" comment="" />
+    <list default="true" id="0fd3dbe6-7724-4371-b2f5-01ef99307d5c" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/autoMD.py" afterPath="$PROJECT_DIR$/autoMD.py" />
+    </list>
     <ignored path="autoMD.py.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -20,28 +24,30 @@
     <favorites_list name="autoMD.py" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="autoMD.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/autoMD.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="381">
-              <caret line="772" column="39" selection-start-line="772" selection-start-column="39" selection-end-line="772" selection-end-column="39" />
+            <state relative-caret-position="506">
+              <caret line="891" column="39" selection-start-line="891" selection-start-column="39" selection-end-line="891" selection-end-column="39" />
               <folding>
                 <element signature="e#23#32#0" expanded="true" />
-                <element signature="e#220#5343#0" expanded="false" />
-                <element signature="e#988#2716#0" expanded="false" />
-                <element signature="e#2746#3867#0" expanded="false" />
-                <element signature="e#3927#4890#0" expanded="false" />
-                <element signature="e#5369#7405#0" expanded="false" />
-                <element signature="e#15411#25378#0" expanded="false" />
-                <element signature="e#15462#15717#0" expanded="false" />
-                <element signature="e#15765#17934#0" expanded="false" />
-                <element signature="e#17988#21696#0" expanded="false" />
-                <element signature="e#21763#24559#0" expanded="false" />
-                <element signature="e#21763#21817#0" expanded="false" />
-                <element signature="e#24643#25378#0" expanded="false" />
-                <element signature="e#25399#26900#0" expanded="false" />
-                <element signature="e#26926#27856#0" expanded="false" />
+                <element signature="e#450#3352#0" expanded="false" />
+                <element signature="e#3396#4259#0" expanded="false" />
+                <element signature="e#4350#4733#0" expanded="false" />
+                <element signature="e#4770#7520#0" expanded="false" />
+                <element signature="e#9465#10596#0" expanded="false" />
+                <element signature="e#11392#19378#0" expanded="false" />
+                <element signature="e#15699#19378#0" expanded="false" />
+                <element signature="e#19454#19709#0" expanded="false" />
+                <element signature="e#19757#21926#0" expanded="false" />
+                <element signature="e#21980#25688#0" expanded="false" />
+                <element signature="e#25755#28551#0" expanded="false" />
+                <element signature="e#25755#25809#0" expanded="false" />
+                <element signature="e#28635#29370#0" expanded="false" />
+                <element signature="e#29391#30892#0" expanded="false" />
+                <element signature="e#30918#31848#0" expanded="false" />
+                <element signature="e#31872#35101#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -56,6 +62,9 @@
       </list>
     </option>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -64,9 +73,10 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="y" value="22" />
-    <option name="width" value="1600" />
-    <option name="height" value="838" />
+    <option name="x" value="8" />
+    <option name="y" value="30" />
+    <option name="width" value="1366" />
+    <option name="height" value="746" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="false">
     <OptionsSetting value="true" id="Add" />
@@ -93,29 +103,32 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="autoMD.py" />
+              <option name="myItemId" value="autoMD" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
           </PATH>
           <PATH>
             <PATH_ELEMENT>
-              <option name="myItemId" value="autoMD.py" />
+              <option name="myItemId" value="autoMD" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="autoMD.py" />
+              <option name="myItemId" value="autoMD" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
   </component>
   <component name="RunManager">
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -270,24 +283,24 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="1600" height="838" extended-state="0" />
+    <frame x="8" y="30" width="1366" height="746" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.213125" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21303074" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
     </layout>
@@ -304,24 +317,52 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/autoMD.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="381">
-          <caret line="772" column="39" selection-start-line="772" selection-start-column="39" selection-end-line="772" selection-end-column="39" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#220#5343#0" expanded="false" />
-            <element signature="e#988#2716#0" expanded="false" />
-            <element signature="e#2746#3867#0" expanded="false" />
-            <element signature="e#3927#4890#0" expanded="false" />
-            <element signature="e#5369#7405#0" expanded="false" />
-            <element signature="e#15411#25378#0" expanded="false" />
-            <element signature="e#15462#15717#0" expanded="false" />
-            <element signature="e#15765#17934#0" expanded="false" />
-            <element signature="e#17988#21696#0" expanded="false" />
-            <element signature="e#21763#24559#0" expanded="false" />
-            <element signature="e#21763#21817#0" expanded="false" />
-            <element signature="e#24643#25378#0" expanded="false" />
-            <element signature="e#25399#26900#0" expanded="false" />
-            <element signature="e#26926#27856#0" expanded="false" />
+            <element signature="e#450#3352#0" expanded="false" />
+            <element signature="e#3396#4259#0" expanded="false" />
+            <element signature="e#4350#4733#0" expanded="false" />
+            <element signature="e#4770#7520#0" expanded="false" />
+            <element signature="e#9465#10596#0" expanded="false" />
+            <element signature="e#11392#19378#0" expanded="false" />
+            <element signature="e#15699#19378#0" expanded="false" />
+            <element signature="e#19454#19709#0" expanded="false" />
+            <element signature="e#19757#21926#0" expanded="false" />
+            <element signature="e#21980#25688#0" expanded="false" />
+            <element signature="e#25755#28551#0" expanded="false" />
+            <element signature="e#25755#25809#0" expanded="false" />
+            <element signature="e#28635#29370#0" expanded="false" />
+            <element signature="e#29391#30892#0" expanded="false" />
+            <element signature="e#30918#31848#0" expanded="false" />
+            <element signature="e#31872#35101#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/autoMD.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="506">
+          <caret line="891" column="39" selection-start-line="891" selection-start-column="39" selection-end-line="891" selection-end-column="39" />
+          <folding>
+            <element signature="e#23#32#0" expanded="true" />
+            <element signature="e#450#3352#0" expanded="false" />
+            <element signature="e#3396#4259#0" expanded="false" />
+            <element signature="e#4350#4733#0" expanded="false" />
+            <element signature="e#4770#7520#0" expanded="false" />
+            <element signature="e#9465#10596#0" expanded="false" />
+            <element signature="e#11392#19378#0" expanded="false" />
+            <element signature="e#15699#19378#0" expanded="false" />
+            <element signature="e#19454#19709#0" expanded="false" />
+            <element signature="e#19757#21926#0" expanded="false" />
+            <element signature="e#21980#25688#0" expanded="false" />
+            <element signature="e#25755#28551#0" expanded="false" />
+            <element signature="e#25755#25809#0" expanded="false" />
+            <element signature="e#28635#29370#0" expanded="false" />
+            <element signature="e#29391#30892#0" expanded="false" />
+            <element signature="e#30918#31848#0" expanded="false" />
+            <element signature="e#31872#35101#0" expanded="false" />
           </folding>
         </state>
       </provider>
