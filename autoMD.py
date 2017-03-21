@@ -537,11 +537,12 @@ class SummaryPDB :
         self.pdbfile = pdbfile
 
         resShortName = {}
-        with open(aminoLibFile) as lines:
-            for s in lines:
-                if "#" not in s:
-                    resShortName[s.split()[2]] = s.split()[3]
-        self.resShortName = resShortName
+        try :
+            with open(aminoLibFile) as lines:
+                for s in lines:
+                    if "#" not in s:
+                        resShortName[s.split()[2]] = s.split()[3]
+            self.resShortName = resShortName
 
     def details(self, verbose=False):
         chains = []

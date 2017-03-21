@@ -2,6 +2,9 @@
 
 import sys
 import os
+import argparse
+from argparse import RawTextHelpFormatter
+
 # this script generates a plumed input file for salt bridge determination
 class PdbIndex :
     """
@@ -153,6 +156,38 @@ class SaltBridgeResidues :
             # output data
             pf.write("PRINT ARG=sb STRIDE=1 FILE=%s \n"%sboutFileName)
 
+def arguments() :
+    d = '''
+    Prepare plumed input file for salt-bridge determination.
+    '''
+    parser = argparse.ArgumentParser(description=d)
+
+    parser.add_argument('-ref', '--reference', type=str, default='reference.pdb',
+                        help='Reference PDB file to get index of atoms. \n'
+                             'Default is reference.pdb ')
+
+    parser.add_argument('-mt','--moleculetype', type=str, nargs='+', default=['Protein', 'Protein'],
+                        help="Select molecule types for your two molecules. \n"
+                             "Default is: Protein Protein. ")
+    parser.add_argument('-rn','--residuename', type=str, nargs='+', default=['ARG','LYS'],
+                        help="By default, if a protein involves salt-bridges, we choose "
+                             "LYS and ARG for distance calculating. \nYou could specify your own.")
+    parser.add_argument('-o', '--output', default='plumed.dat',type=str,
+                        help="Output file name for plumed. \n Default is Plumed.dat.")
+    parser.add_argument('-res', '--residuerange',default=[], nargs='+',
+                        help="Residue sequence index range for residues involving salt bridges. ")
+    parser.add_argument('-cA', '--chainsA', type=str, default=['A'], nargs='+',
+                        help="For molecule A, select the chains of molecule A.")
+    parser.add_argument('-cB', '--chainsB', type=str, default=['B'], nargs='+',
+                        help="For molecule B, select the chains of molecule B.")
+    parser.add_argument('-cutoff','--distance_cutoff', default=0.32, type=float,
+                        help="Distance cutoff (nanometer) for an effective salt-bridge like contact. \n"
+                             "Default is 0.32 nm. ")
+
+    args = parser.parse_known_args()
+
+    return(args)
+
 if __name__ == "__main__" :
     # cd $PWD
     os.chdir(os.getcwd())
@@ -163,28 +198,41 @@ if __name__ == "__main__" :
         Generating Input For Plumed to Calculate Number of Salt Bridges vs Time.
         Usage:
 
-        python SaltBridge4Plumed.py reference.pdb plumed.dat
+        python SaltBridge4Plumed.py -h
         '''
         print(d)
         sys.exit(1)
 
-    pdbfile = args[1]
+    args = arguments()
 
-    # group A
-    ares = SaltBridgeResidues(pdbfile)
-    resndx = ares.residueNdx(['ARG','LYS',], range(4, 1400), ['B'])
-    andx = PdbIndex(pdbfile, "B", "", resndx)
-    aatom = andx.res_index(['NH1'], )
+    pdbfile = args.ref
 
-    # group B
-    bres = SaltBridgeResidues(pdbfile)
-    batom = []
-    for c in ['A','C','D'] :
-        resndx = bres.residueNdx(['DA','DT','DC','DG','A','U','C','G'], range(1, 200), [c])
-        bndx = PdbIndex(pdbfile, c, "", resndx)
-        batom += bndx.res_index(['O1P'])
+    # group A B
+    atomsAB = []
+    try:
+
+        for i in range(2) :
+            aatom = []
+
+            chains = [args.cA, args.cB]
+
+            ares = SaltBridgeResidues(pdbfile)
+            resndx = ares.residueNdx(args.rn, range(args.res[0], args.res[1]), args.cA)
+
+            for chain in chains[i] :
+                    andx = PdbIndex(pdbfile, chain, "", resndx)
+                    if args.mt[i] in ["Protein", "protein", "pro"]:
+                        if i == 0 :
+                            aatom += andx.res_index(['NH1', 'NH2', 'NE'], )
+                        else :
+                            aatom += andx.res_index(['O',], )
+                    elif args.mt[i] in ['RNA', 'DNA', 'rna', 'dna', 'nucleic'] :
+                        aatom += andx.res_index(['OP1','OP2'], )
+            atomsAB.append(aatom)
+    except :
+        print("Name Error!")
 
     cplxsb = SaltBridgeResidues(pdbfile)
-    cplxsb.saltbridgePlumedInput(aatom, batom, 0.32, 'plumed_sb.dat')
+    cplxsb.saltbridgePlumedInput(atomsAB[0], atomsAB[1], args.cutoff, args.o)
 
-    print("Run plumed:\nplumed driver --mf_xtc your.xtc --plumed plumed.dat")
+    print("Run plumed:\nplumed driver --mf_xtc your.xtc --plumed %s\n"%args.o)
