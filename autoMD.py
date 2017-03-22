@@ -9,6 +9,7 @@ from argparse import RawTextHelpFormatter
 import math
 from glob import glob
 from collections import *
+import linecache
 
 class PdbIndex :
     """
@@ -245,7 +246,7 @@ class RewritePDB :
         resseq = resStartNdx
         atomseq = int(atomStartNdx)
         chainname = chain
-        lines = open(filename)
+        lines = open(self.pdb)
         newfile = open(output,'w')
         resseq_list = []
 
@@ -296,6 +297,25 @@ class GenerateTop :
 
     def gmxTopBuilder(self, frcmodFile, prepfile, PDBFile,outputName, ionName, ionNum, solveBox=None, boxEdge=12,
                       FField=["AMBER99SB", ], verbose=True):
+        '''
+        provide a coordination file, output a amber and gromacs topology file.
+
+        required parameters
+
+        :param frcmodFile: not required if the molecule is a protein, or DNA, RNA
+        :param prepfile: not required if the molecule is a protein, or DNA, RNA
+        :param PDBFile: input, coordination file
+        :param outputName: output, output file name
+        :param ionName: optional
+        :param ionNum: optional
+        :param solveBox: optional, type of solvation box, default is TIP3PBOX
+        :param boxEdge: optional
+        :param FField: a set of amber force fields, generally, we could choose
+            99sb, 99sbildn, gaff, 12, 14sb
+        :param verbose:
+        :return: None
+        '''
+
         # check AMBERHOME PATH
         AMBERHOME = sp.check_output("echo $AMBERHOME", shell=True)
         AMBERHOME = AMBERHOME[:-1] + "/"
@@ -343,6 +363,9 @@ class GenerateTop :
             print "Loading PDB file or Sequence file error!"
             sys.exit(1)
 
+        # save a amber off file of the molecule
+        leapin.write("saveoff pdb %s.lib \n" % outputName)
+
         # add counter ions and solvate solute into water box
         if ionNum[0] > 0 and ionName[0] != "X+":
             if len(ionNum) == len(ionName):
@@ -377,7 +400,6 @@ class GenerateTop :
         if verbose :
             print(out)
 
-
         # convert AMBER format to GMX format
         time.sleep(1)
         out = sp.check_output("Amb2gmx.pl --prmtop %s.prmtop --crd %s.prmcrd --outname gmx_%s " \
@@ -385,7 +407,6 @@ class GenerateTop :
         if verbose :
             print(out)
             print("GMX topology created")
-        return(1)
 
     def runObabel(self, obabelexe, input, output, verbose=True):
         status = sp.check_output("%s %s -O %s "%(obabelexe, input, output))
@@ -418,7 +439,13 @@ class GenerateTop :
             print("ITP file for %s generated! " % outputName)
         return(1)
 
-    def runAntechamber(self, netcharge, antechamber="sample_antechamber.sh"):
+    def runAntechamber(self, infile, netCharge, antechamber="sample_antechamber.sh"):
+        '''
+        run antechamber to generate RESP am1/bcc atomic charges
+        :param netcharge: input, number of netcharges of the molecule
+        :param antechamber: input, optional, a sample antechamber shell script
+        :return: the file name of the antechamber shell script
+        '''
         if not os.path.exists(antechamber) :
             with open(antechamber, 'w') as tofile :
                 content = '''
@@ -449,6 +476,16 @@ echo "AMBER : leaprc.ff90"
                 '''
                 tofile.write(content)
         # run antechamber here, may first generate a sh script and then wrap it up
+        if not netCharge :
+            try:
+                nc = SummaryPDB(pdbfile=infile)
+                netcharge = nc.netCharges(inputMol=infile)
+            except :
+                print("Getting netcharge error!")
+                netcharge = 0
+        else :
+            netcharge = 0
+
         tofile = open("antechamber.sh", 'w')
         with open(antechamber) as lines:
             for s in lines:
@@ -460,8 +497,13 @@ echo "AMBER : leaprc.ff90"
         return("antechamber.sh")
 
     def arguments(self):
+        '''
+        Parse arguments in the command line mode.
 
-        # go current directory
+        :return: args, a parser.argument object
+        '''
+
+        # go current directory, pwd
         os.chdir(os.getcwd())
 
         if 0 :
@@ -520,10 +562,11 @@ echo "AMBER : leaprc.ff90"
                                      "use RESP with bcc AM1 to determine charges and \n"
                                      "prepare parameters. Options: True, False. \n"
                                      "Defualt is False. \n")
-            parser.add_argument("-nc", default=0, type=int,
+            parser.add_argument("-nc", default=None, type=int,
                                 help="Net charge. This argument only works with \n"
                                      "the -resp argument. Default is 0. \n")
 
+            # args include the options in the argparser
             args, unknown = parser.parse_known_args()
             if len(sys.argv) < 3 :
                 parser.print_help()
@@ -531,6 +574,201 @@ echo "AMBER : leaprc.ff90"
                 sys.exit(1)
 
             return(args)
+
+class ExtractPDB :
+    def __init__(self):
+        pass
+
+    def extract_pdb(self,filename, structname, first_n_frame):
+        '''
+        from a big pdb file to extract single PDB structure file
+
+        :param filename:
+        :param structname:
+        :param first_n_frame:
+        :return:
+        '''
+
+        lines = open(filename)
+        file_no = 1
+        pdbline = open(structname+'_'+str(file_no)+'.pdb','w')
+
+        for s in lines :
+
+            if  "MODEL" in s :
+                if file_no != 1 :
+                    pdbline = open(structname+'_'+str(file_no)+'.pdb','w')
+                pdbline.write(s)
+                print "Start Model " + str(file_no)
+                file_no += 1
+
+            elif "ATOM" == s.split()[0] or "TER" == s.split()[0] :
+                pdbline.write(s)
+
+            elif "ENDMDL" in s :
+                pdbline.write(s)
+                pdbline.close()
+
+            else :
+                pass
+
+            if first_n_frame != 0 and file_no > first_n_frame + 1 :
+                print "Extract only the first "+str(first_n_frame)
+                break
+
+        print "Finished!\n\n"
+
+    def extract_frame(self,filename, structname):
+        lines = open(filename)
+        print "The models of the pdb file is : "
+        for s in lines :
+            if "MODEL" in s :
+                print "    "+s[:-1]
+        lines.close()
+
+        print "Which frames would you want to extract ? "
+        frames = raw_input("Input the frame number(s) here (multi numbers are accepted):  ")
+
+        frame_list = frames.split()
+        for frame_no in frame_list :
+
+            lines  = open(filename)
+            condition = False
+            for s in lines :
+                if "MODEL" in s and int(frame_no) == int(s.split()[1])  :
+                    newline = open(structname+"_"+str(frame_no)+".pdb","w")
+                    newline.write(s)
+                    condition = True
+                elif "ATOM" in s and condition :
+                    newline.write(s)
+                elif condition and "ENDMDL" in s :
+                    condition = False
+                elif "MODEL" in s and int(frame_no)+1 == int(s.split()[1]) :
+                    condition = False
+                    break
+                else :
+                    condition = False
+            newline.close()
+            lines.close()
+
+        print "Finished writing frames to separated files!\n\n"
+
+    def printinfor(self):
+        print "What would you like to do now ?"
+        print "  1. Extract all the frames from the input pdb file;"
+        print "  2. Extract selected frames from the input file;"
+        print "  3. Extract the first N frames from the input file;"
+        print "  4. Do nothing and exit now. "
+
+    def indexCoord(self, filename):
+        '''
+        provide a large coordination file, eg, a pdb file or a mol2 file,
+        return the indexing of the frames
+
+        :param filename: the file name of a large multiple-frames coordination file
+            either a pdb, a pdbqt or a mol2 file
+        :return: the indexing of the first line of a multiple-frame file
+        '''
+        indexing = []
+        lineNumber=-1
+
+        extention = filename.split(".")[-1]
+
+        with open(filename) as lines :
+            if extention in ['pdb', 'pdbqt'] :
+                for s in lines :
+                    lineNumber += 1
+                    if len(s.split()) > 1 and "MODEL" == s.split()[0] :
+                        indexing.append(lineNumber)
+            elif extention in ['mol2'] :
+                for s in lines :
+                    lineNumber += 1
+                    if "@<TRIPOS>MOLECULE" in s :
+                        indexing.append(lineNumber)
+            else:
+                print("Only a pdb file, a pdbqt file or a mol2 file supported.")
+                sys.exit(0)
+
+        return(indexing)
+
+    def extract_all(self, filename, structname):
+        '''
+        extract all the frames into seperated mol2 (or, pdb and pdbqt) files
+
+        :param filename: the multiple-frames mol2 file
+        :param structname: the prefix of the extracted separated frames
+        :return: None
+        '''
+        extension = filename.split('.')[-1]
+        if extension in ['pdb', 'pdbqt', 'mol2'] :
+            try :
+                # try to loop over the file to count number of lines in the file
+                totalLineNum = sum(1 for line in open(filename))
+            except IOError :
+                totalLineNum = 0
+
+            # if in the file filename, the file is not empty,
+            # start to extract frames
+            if totalLineNum :
+                structFirstLineIndex = self.indexCoord(filename)
+                # at the end of file, provide a sudo-next frame start line index
+                structFirstLineIndex.append(totalLineNum)
+
+                for i in range(len(structFirstLineIndex))[1:] :
+                    start_end = [structFirstLineIndex[i-1], structFirstLineIndex[i]]
+
+                    with open(structname+"_"+str(i)+"."+extension, 'wb') as tofile :
+                        # extract the specific lines from the large multiple-frame
+                        # file to write to a new file.
+                        for lndx in range(start_end[0]+1, start_end[1]+1) :
+                            tofile.write(linecache.getline(filename, lndx))
+            else :
+                print("File %s is empty. Couldnot extract frames. " % filename)
+        else :
+            print("PDB, PDBQT, or MOL2 file is required. ")
+            sys.exit(0)
+
+        print("Extracting all frames in mol2 file completed. ")
+
+    def arguments(self):
+        # PWD, change directory to PWD
+        os.chdir(os.getcwd())
+
+        d = '''
+        This script try to extract PDB frames from a long trajectory file from GMX trjconv or g_cluster.
+        Any questions, contact Liangzhen Zheng, astrozheng@gmail.com
+
+        Examples :
+        Get help information
+        python autoMD.py extract -h
+        Extract frames in a multiple-frames PDB file, which contains "MODEL 1", "MODEL 2"
+
+        PDB_Extractor.py extract -i md.pdb -o splitted
+
+        after which interactive mode is entered and you are promoted to choose one of the 4 options:
+            1. Extract all the frames from the input pdb file;
+            2. Extract selected frames from the input file;
+            3. Extract the first N frames from the input file;
+            4. Do nothing and exit now.
+        '''
+        parser = argparse.ArgumentParser(description=d, formatter_class=RawTextHelpFormatter)
+        parser.add_argument('-i', '--input', type=str, default="yourpdb.pdb",
+                            help="Input PDB file name. Default is yourpdb.pdb.")
+        parser.add_argument('-o', '--output', type=str, default="out",
+                            help="Output file format. Default is out_*.pdb.")
+        parser.add_argument('-m', '--allMol2', type=bool, default=False,
+                            help='Extract all the frames in a mol2 file. \n'
+                                 'Options: True, False \n'
+                                 'Default is False.')
+        options, args = parser.parse_known_args()
+
+        if len(sys.argv) < 2:
+            parser.print_help()
+            sys.exit(1)
+        else:
+            parser.print_help()
+
+        return(options)
 
 class SummaryPDB :
     def __init__(self, pdbfile, aminoLibFile):
@@ -543,6 +781,59 @@ class SummaryPDB :
                     if "#" not in s:
                         resShortName[s.split()[2]] = s.split()[3]
             self.resShortName = resShortName
+        except IOError :
+            self.resShortName = {}
+
+    def netCharges(self, inputMol, ligName=None):
+        '''
+        netCharges determine the net charge of a molecule, given a pdb file.
+        if the input molecule is a pdbqt (Vina input), or pqr (APBS input type),
+           a molecule name (residue code) is need.
+        if a mol2 file provide, only the @<TRIPOS>ATOM field will be used, no ligand name required.
+
+        other formats are not supported.
+
+        last column of a pdbqt, pqr and mol2 file generally will be the atomic charge field,
+          otherwise, a ValueError exception will be rasied.
+
+        :param inputMol: input file with atomic charges in the last column
+        :return int netCharge
+        '''
+        extension = inputMol.split(".")[-1]
+        netCharge = 0.0
+
+        with open(inputMol) as lines :
+            if extension in ['pdbqt', 'pqr']:
+                for s in lines :
+
+                    if s.split()[0] in ["ATOM", "HETATM"] and len(s.split()) > 5 :
+                        try :
+                            if ligName and ligName in s :
+                                netCharge += float(s.split()[-1])
+                            elif not ligName :
+                                netCharge += float(s.split()[-1])
+                        except ValueError :
+                            netCharge += 0.0
+                            print("Last column in %s is not a float point charge value."%inputMol)
+            elif extension in ['mol2'] :
+                condition = False
+                for s in lines :
+                    if len(s.split()) and "@" in s :
+                        if "<TRIPOS>ATOM" in s :
+                            condition = True
+                        else :
+                            condition = False
+                    elif condition and len(s.split() ):
+                        try:
+                            netCharge += float(s.split()[-1])
+                        except ValueError :
+                            netCharge += 0.0
+                            print("Last column in %s is not a float point charge value." % inputMol)
+            else :
+                print("The file extention is not recognized. "
+                      "\nPlease provide a pdbqt, pqr, or a mol2 file.")
+
+        return(int(netCharge))
 
     def details(self, verbose=False):
         chains = []
@@ -606,7 +897,8 @@ class SummaryPDB :
         #for chain in chains :
         #resNdxNameDict = {}
         if len(resNdx[chain]) != len(resName[chain]) :
-            print "Error in function SummaryPDB.details. \nNumber of index is different with number of residues."
+            print "Error in function SummaryPDB.details. " \
+                  "\nNumber of index is different with number of residues."
             print "Exit Now!"
             sys.exit(1)
 
@@ -928,7 +1220,56 @@ class AutoRunMD :
 
         return(outTprFile[-4:]+".gro")
 
+def runExtract() :
+    '''
+    run ExtractPDB class
+    extract frames from a multiple-frames pdb file or mol2 file
+    :return: None
+    '''
+    pdb = ExtractPDB()
+    args = pdb.arguments()
+
+    pdbfile = args.input
+    structname = args.output
+
+    if args.allMol2 :
+        # if we choose to extract all frames in a mol2 file
+        pdb.extract_all(args.input, args.output)
+    else :
+        pdb.printinfor()
+        command = raw_input("Your choice:  ")
+        while command in ['0', '1', '2', '3', '4']:
+            if command == "1":
+                pdb.extract_pdb(pdbfile, structname, 0)
+                command = '0'
+            elif command == "2":
+                pdb.extract_frame(pdbfile, structname)
+                command = '0'
+            elif command == "3":
+                fnframe = raw_input("  The first N frames output : N = ")
+                pdb.extract_pdb(pdbfile, structname, int(fnframe))
+                command = '0'
+            elif command == "4" or command not in "01234":
+                print "\nExit now. \nHave a nice day!"
+                command = '5'
+                sys.exit(0)
+                # return None
+            elif command == "0":
+                pdb.printinfor()
+                command = raw_input("Your choice:  ")
+
 def runGenTop() :
+    '''
+    instant a gmxTopBuilder class, and input some parameters,
+        to generate amber and gromacs topology and coordinates
+
+    if a small ligand provide, if not prep and frcmod exist,
+        then am1/bcc charge based on amber antechamber sqm method
+        will be calculated. in this process, tleap will be used to
+        get bonded and non-bonded parameters
+    :parameter: None
+    :return: None
+    '''
     top = GenerateTop()
     args = top.arguments()
 
@@ -937,7 +1278,8 @@ def runGenTop() :
     except :
         os.system("export AMBERHOME=/home/liangzhen/software/amber14/")
 
-    # define the input coordinates information
+    # define the input coordinates information, a pdb, or mol2, or a sequence
+    # of amino acids
     if args.aaseq:
         structure = args.aaseq
     elif args.inp:
@@ -948,7 +1290,7 @@ def runGenTop() :
         sys.exit(0)
 
     if not args.resp:
-
+        # not calculate atomic charges
         top.gmxTopBuilder(args.frcmod, args.prep,
                           structure, args.out,
                           args.ion, args.nion,
@@ -956,6 +1298,7 @@ def runGenTop() :
                           args.ff)
     else:
         # prepare resp charges for small ligand with antechamber
+        # give a netcharge: args.nc
         sh = top.runAntechamber(args.nc)
 
         try:
@@ -963,7 +1306,7 @@ def runGenTop() :
             os.environ["AMBERHOME"] = "/home/liangzhen/software/amber14/"
             job = sp.Popen("sh %s %s %s" % (sh, args.inp, args.out), shell=True)
             job.communicate()
-        except:
+        except :
             print("Antechamber generateing RESP and atomic parameters error! \n "
                   "Double check your input structure.")
             sys.exit(1)
@@ -976,6 +1319,7 @@ def runGenTop() :
                           args.ff)
 
     if args.ion[0] == "X+" or args.bt == "NA":
+        # parse a gromacs .top to a .itp file
         # print "ITP file created!"
         top.removeMolInfor(args.out)
 
@@ -995,6 +1339,7 @@ if __name__ == "__main__" :
         python autoMD.py -h
         python autoMD.py gentop -h
         python autoMD.py index -h
+        python autoMD.py extract -h
         '''
         print(help_information)
         sys.exit(1)
@@ -1006,3 +1351,6 @@ if __name__ == "__main__" :
         #if 1 :
         elif str(sys.argv[1]) == "gentop" :
             runGenTop()
+
+        elif str(sys.argv[1]) == "extract" :
+            runExtract()
