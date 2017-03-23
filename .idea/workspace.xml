@@ -2,7 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="0fd3dbe6-7724-4371-b2f5-01ef99307d5c" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/autoMD.py" afterPath="$PROJECT_DIR$/autoMD.py" />
     </list>
     <ignored path="autoMD.py.iws" />
@@ -27,25 +26,21 @@
       <file leaf-file-name="autoMD.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/autoMD.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="391">
-              <caret line="725" column="78" selection-start-line="725" selection-start-column="78" selection-end-line="725" selection-end-column="78" />
+            <state relative-caret-position="184">
+              <caret line="221" column="44" selection-start-line="221" selection-start-column="44" selection-end-line="221" selection-end-column="44" />
               <folding>
                 <element signature="e#23#32#0" expanded="true" />
-                <element signature="e#237#9689#0" expanded="false" />
-                <element signature="e#467#3369#0" expanded="false" />
-                <element signature="e#3413#4276#0" expanded="false" />
-                <element signature="e#4367#4750#0" expanded="false" />
-                <element signature="e#9714#11750#0" expanded="false" />
-                <element signature="e#24596#25602#0" expanded="false" />
-                <element signature="e#25662#26888#0" expanded="false" />
-                <element signature="e#27260#28332#0" expanded="false" />
-                <element signature="e#31833#44184#0" expanded="false" />
-                <element signature="e#32293#34500#0" expanded="false" />
-                <element signature="e#34548#36717#0" expanded="false" />
-                <element signature="e#40569#43365#0" expanded="false" />
-                <element signature="e#44205#45706#0" expanded="false" />
-                <element signature="e#45732#46662#0" expanded="false" />
-                <element signature="e#46686#49915#0" expanded="false" />
+                <element signature="e#11407#13443#0" expanded="false" />
+                <element signature="e#26289#27295#0" expanded="false" />
+                <element signature="e#27355#28581#0" expanded="false" />
+                <element signature="e#28953#30025#0" expanded="false" />
+                <element signature="e#33526#45877#0" expanded="false" />
+                <element signature="e#33986#36193#0" expanded="false" />
+                <element signature="e#36241#38410#0" expanded="false" />
+                <element signature="e#42262#45058#0" expanded="false" />
+                <element signature="e#45898#47399#0" expanded="false" />
+                <element signature="e#47425#48355#0" expanded="false" />
+                <element signature="e#48379#51608#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -54,7 +49,7 @@
       <file leaf-file-name="PDB_Extractor.py" pinned="false" current-in-tab="false">
         <entry file="file://$USER_HOME$/Dropbox/PycharmProjects/scripts/PDB_Extractor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="637">
+            <state relative-caret-position="2190">
               <caret line="150" column="0" selection-start-line="128" selection-start-column="0" selection-end-line="150" selection-end-column="0" />
               <folding />
             </state>
@@ -81,8 +76,7 @@
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="8" />
-    <option name="y" value="30" />
+    <option name="y" value="22" />
     <option name="width" value="1600" />
     <option name="height" value="838" />
   </component>
@@ -111,6 +105,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -132,7 +127,6 @@
         </subPane>
       </pane>
       <pane id="Scratches" />
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -291,10 +285,10 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="8" y="30" width="1600" height="838" extended-state="0" />
+    <frame x="0" y="22" width="1600" height="838" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.181875" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.144375" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -337,78 +331,24 @@
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#237#9689#0" expanded="false" />
-            <element signature="e#467#3369#0" expanded="false" />
-            <element signature="e#3413#4276#0" expanded="false" />
-            <element signature="e#4367#4750#0" expanded="false" />
-            <element signature="e#9714#11750#0" expanded="false" />
-            <element signature="e#24596#25602#0" expanded="false" />
-            <element signature="e#25662#26888#0" expanded="false" />
-            <element signature="e#27260#28332#0" expanded="false" />
-            <element signature="e#31833#44184#0" expanded="false" />
-            <element signature="e#32293#34500#0" expanded="false" />
-            <element signature="e#34548#36717#0" expanded="false" />
-            <element signature="e#40569#43365#0" expanded="false" />
-            <element signature="e#44205#45706#0" expanded="false" />
-            <element signature="e#45732#46662#0" expanded="false" />
-            <element signature="e#46686#49915#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/autoMD.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#237#9689#0" expanded="false" />
-            <element signature="e#467#3369#0" expanded="false" />
-            <element signature="e#3413#4276#0" expanded="false" />
-            <element signature="e#4367#4750#0" expanded="false" />
-            <element signature="e#9714#11750#0" expanded="false" />
-            <element signature="e#24596#25602#0" expanded="false" />
-            <element signature="e#25662#26888#0" expanded="false" />
-            <element signature="e#27260#28332#0" expanded="false" />
-            <element signature="e#31833#44184#0" expanded="false" />
-            <element signature="e#32293#34500#0" expanded="false" />
-            <element signature="e#34548#36717#0" expanded="false" />
-            <element signature="e#40569#43365#0" expanded="false" />
-            <element signature="e#44205#45706#0" expanded="false" />
-            <element signature="e#45732#46662#0" expanded="false" />
-            <element signature="e#46686#49915#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/autoMD.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding>
-            <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#237#9689#0" expanded="false" />
-            <element signature="e#467#3369#0" expanded="false" />
-            <element signature="e#3413#4276#0" expanded="false" />
-            <element signature="e#4367#4750#0" expanded="false" />
-            <element signature="e#9714#11750#0" expanded="false" />
-            <element signature="e#24596#25602#0" expanded="false" />
-            <element signature="e#25662#26888#0" expanded="false" />
-            <element signature="e#27260#28332#0" expanded="false" />
-            <element signature="e#31833#44184#0" expanded="false" />
-            <element signature="e#32293#34500#0" expanded="false" />
-            <element signature="e#34548#36717#0" expanded="false" />
-            <element signature="e#40569#43365#0" expanded="false" />
-            <element signature="e#44205#45706#0" expanded="false" />
-            <element signature="e#45732#46662#0" expanded="false" />
-            <element signature="e#46686#49915#0" expanded="false" />
+            <element signature="e#11407#13443#0" expanded="false" />
+            <element signature="e#26289#27295#0" expanded="false" />
+            <element signature="e#27355#28581#0" expanded="false" />
+            <element signature="e#28953#30025#0" expanded="false" />
+            <element signature="e#33526#45877#0" expanded="false" />
+            <element signature="e#33986#36193#0" expanded="false" />
+            <element signature="e#36241#38410#0" expanded="false" />
+            <element signature="e#42262#45058#0" expanded="false" />
+            <element signature="e#45898#47399#0" expanded="false" />
+            <element signature="e#47425#48355#0" expanded="false" />
+            <element signature="e#48379#51608#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$USER_HOME$/Dropbox/PycharmProjects/scripts/PDB_Extractor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="637">
+        <state relative-caret-position="2190">
           <caret line="150" column="0" selection-start-line="128" selection-start-column="0" selection-end-line="150" selection-end-column="0" />
           <folding />
         </state>
@@ -416,25 +356,92 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/autoMD.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="391">
-          <caret line="725" column="78" selection-start-line="725" selection-start-column="78" selection-end-line="725" selection-end-column="78" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
             <element signature="e#23#32#0" expanded="true" />
-            <element signature="e#237#9689#0" expanded="false" />
-            <element signature="e#467#3369#0" expanded="false" />
-            <element signature="e#3413#4276#0" expanded="false" />
-            <element signature="e#4367#4750#0" expanded="false" />
-            <element signature="e#9714#11750#0" expanded="false" />
-            <element signature="e#24596#25602#0" expanded="false" />
-            <element signature="e#25662#26888#0" expanded="false" />
-            <element signature="e#27260#28332#0" expanded="false" />
-            <element signature="e#31833#44184#0" expanded="false" />
-            <element signature="e#32293#34500#0" expanded="false" />
-            <element signature="e#34548#36717#0" expanded="false" />
-            <element signature="e#40569#43365#0" expanded="false" />
-            <element signature="e#44205#45706#0" expanded="false" />
-            <element signature="e#45732#46662#0" expanded="false" />
-            <element signature="e#46686#49915#0" expanded="false" />
+            <element signature="e#11407#13443#0" expanded="false" />
+            <element signature="e#26289#27295#0" expanded="false" />
+            <element signature="e#27355#28581#0" expanded="false" />
+            <element signature="e#28953#30025#0" expanded="false" />
+            <element signature="e#33526#45877#0" expanded="false" />
+            <element signature="e#33986#36193#0" expanded="false" />
+            <element signature="e#36241#38410#0" expanded="false" />
+            <element signature="e#42262#45058#0" expanded="false" />
+            <element signature="e#45898#47399#0" expanded="false" />
+            <element signature="e#47425#48355#0" expanded="false" />
+            <element signature="e#48379#51608#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/autoMD.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#23#32#0" expanded="true" />
+            <element signature="e#11407#13443#0" expanded="false" />
+            <element signature="e#26289#27295#0" expanded="false" />
+            <element signature="e#27355#28581#0" expanded="false" />
+            <element signature="e#28953#30025#0" expanded="false" />
+            <element signature="e#33526#45877#0" expanded="false" />
+            <element signature="e#33986#36193#0" expanded="false" />
+            <element signature="e#36241#38410#0" expanded="false" />
+            <element signature="e#42262#45058#0" expanded="false" />
+            <element signature="e#45898#47399#0" expanded="false" />
+            <element signature="e#47425#48355#0" expanded="false" />
+            <element signature="e#48379#51608#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/autoMD.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#23#32#0" expanded="true" />
+            <element signature="e#11407#13443#0" expanded="false" />
+            <element signature="e#26289#27295#0" expanded="false" />
+            <element signature="e#27355#28581#0" expanded="false" />
+            <element signature="e#28953#30025#0" expanded="false" />
+            <element signature="e#33526#45877#0" expanded="false" />
+            <element signature="e#33986#36193#0" expanded="false" />
+            <element signature="e#36241#38410#0" expanded="false" />
+            <element signature="e#42262#45058#0" expanded="false" />
+            <element signature="e#45898#47399#0" expanded="false" />
+            <element signature="e#47425#48355#0" expanded="false" />
+            <element signature="e#48379#51608#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/Dropbox/PycharmProjects/scripts/PDB_Extractor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2190">
+          <caret line="150" column="0" selection-start-line="128" selection-start-column="0" selection-end-line="150" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/autoMD.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="184">
+          <caret line="221" column="44" selection-start-line="221" selection-start-column="44" selection-end-line="221" selection-end-column="44" />
+          <folding>
+            <element signature="e#23#32#0" expanded="true" />
+            <element signature="e#11407#13443#0" expanded="false" />
+            <element signature="e#26289#27295#0" expanded="false" />
+            <element signature="e#27355#28581#0" expanded="false" />
+            <element signature="e#28953#30025#0" expanded="false" />
+            <element signature="e#33526#45877#0" expanded="false" />
+            <element signature="e#33986#36193#0" expanded="false" />
+            <element signature="e#36241#38410#0" expanded="false" />
+            <element signature="e#42262#45058#0" expanded="false" />
+            <element signature="e#45898#47399#0" expanded="false" />
+            <element signature="e#47425#48355#0" expanded="false" />
+            <element signature="e#48379#51608#0" expanded="false" />
           </folding>
         </state>
       </provider>

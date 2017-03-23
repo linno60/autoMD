@@ -12,13 +12,26 @@ from collections import *
 import linecache
 
 class PdbIndex :
-    """
+    '''
     Input the reisude number sequence, then out put the required index atoms
-    """
+    '''
     def __init__(self, ) :
         pass
 
     def res_index(self,inpdb, chain, atomtype, residueNdx, atomList, dihedraltype="None"):
+        '''
+        Obtain atom index from a reference pdb file
+        provide information including: residue indexing, atomtype, atomname
+
+        :param inpdb:
+        :param chain:
+        :param atomtype:
+        :param residueNdx:
+        :param atomList:
+        :param dihedraltype:
+        :param atomName:
+        :return: a list, of atom index
+        '''
 
         #atomInfor = {}
         indexlist = []
@@ -75,6 +88,7 @@ class PdbIndex :
                                 if s[12:16].strip() not in ['CA', 'N', 'C', 'O'] :
                                     indexlist.append(s.split()[1])
                             else:
+#                                print "ATOM LIST"
                                 if s[12:16].strip() in atomList :
                                     indexlist.append(s.split()[1])
                         else :
@@ -84,31 +98,39 @@ class PdbIndex :
 
         return(indexlist)
 
-    def atomList(self, atomtype):
+    def atomList(self, atomtype, atomname):
+        '''
+        provide information of atom type and atomname
+        :param atomtype:
+        :param atomname:
+        :return:
+        '''
         atomList = []
-        atomtype = ""
-        if "mainchain" in atomtype or "Main" in atomtype or "main" in atomtype :
-            atomList = ['CA', 'N', 'C', 'O']
+        if atomname :
+            atomList = atomname
+        else :
+            if "mainchain" in atomtype or "Main" in atomtype or "main" in atomtype :
+                atomList = ['CA', 'N', 'C', 'O']
 
-        elif "CA" in atomtype or "ca" in atomtype or "Ca" in atomtype or "alpha" in atomtype :
-            atomList = ['CA']
+            elif "CA" in atomtype or "ca" in atomtype or "Ca" in atomtype or "alpha" in atomtype :
+                atomList = ['CA']
 
-        elif "backbone" in atomtype or "Back" in atomtype or "bone" in atomtype :
-            atomList = ['CA', 'N']
+            elif "backbone" in atomtype or "Back" in atomtype or "bone" in atomtype :
+                atomList = ['CA', 'N']
 
-        elif "all" in atomtype :
-            atomtype = "all-atom"
+            elif "all" in atomtype :
+                atomtype = "all-atom"
 
-        elif "no hy" in atomtype or "non-hy" in atomtype :
-            atomtype = "non-hydrogen"
+            elif "no hy" in atomtype or "non-hy" in atomtype :
+                atomtype = "non-hydrogen"
 
-        elif "side" in atomtype or "Sidechain" in atomtype or "sidechain" in atomtype :
-            atomtype = "side-chain"
+            elif "side" in atomtype or "Sidechain" in atomtype or "sidechain" in atomtype :
+                atomtype = "side-chain"
 
-        elif "PSI" in atomtype or "PHI" in atomtype or "phi" in atomtype or 'psi' in atomtype :
-            atomtype = "dihedral"
+            elif "PSI" in atomtype or "PHI" in atomtype or "phi" in atomtype or 'psi' in atomtype :
+                atomtype = "dihedral"
 
-        return  atomList, atomtype
+        return(atomList, atomtype)
 
     def atomList2File(self, atomNdxList, groupName, outputNdxFile, append=True):
         if append :
@@ -131,21 +153,22 @@ class PdbIndex :
         d = '''
         ################################################################
         # Generate GMX Index from a PDB file
-        # Generate POSRES file for a PDB or Gro File
+        # Generate POSRES file for a PDB File or Gro File
         # Contact  LZHENG002@E.NTU.EDU.SG
-        # Version  2.0
+        # Version  2.2
+        # Update Mar 23, 2017
         ################################################################
 
         Usage examples
 
         Generate backbone index for residue 1 to 1000 within Chain B
-        python PdbIndex.py -res 1 100 -at backbone -chain B -out index.ndx
+        python autoMD.py index -res 1 100 -at backbone -chain B -out index.ndx
 
         Generate all atom index for residue 78 to 100
-        python PdbIndex.py -inp S_1.pdb -out index.ndx -at allatom -chain ' ' -res 78 100
+        python autoMD.py index -inp S_1.pdb -out index.ndx -at allatom -chain ' ' -res 78 100
 
         Generate dihedral (PHI only) quadroplex index
-        python PdbIndex.py -inp S_1.pdb -out index.ndx -at dihedral -chain ' ' -res 78 100 -dihedral PHI
+        python autoMD.py index -inp S_1.pdb -out index.ndx -at dihedral -chain ' ' -res 78 100 -dihedral PHI
 
         '''
 
@@ -161,6 +184,10 @@ class PdbIndex :
                                  "Options including: allatom, mainchain, \n"
                                  "non-hydrogen, c-alpha, backbone, sidechain, dihedral\n"
                                  "Default choice is: allatom \n")
+        parser.add_argument('-an','--atomname', type=str, default=[], nargs='+',
+                            help="Select atom by atom names. A list of atom names \n"
+                                 "could be supplied. If not given, all atom names are \n"
+                                 "considered. Default is [].")
         parser.add_argument('-chain', '--chainId',type=str, default="A",
                             help="Protein chain identifier. Default chain ID is A. \n")
         parser.add_argument('-res', '--residueRange',type=int, nargs='+',
@@ -170,15 +197,18 @@ class PdbIndex :
         parser.add_argument('-posres', '--positionRestraint',default=False,
                             help="Generate a postion restraint file for selected index.\n"
                                  "Default name is posres.itp \n")
-        parser.add_argument('-dihedral', '--dihedralType',default="NA",
+        parser.add_argument('-dihe', '--dihedralType',default=None, type=str,
                             help="Whether generate dihedral angles index (quadruplex).\n"
                                  "Phi and Psi are considered. Optional choices are: \n"
                                  "PHI, PSI, PHI_PSI, or NA. Default is NA. \n")
+        parser.add_argument('-gn','--groupName', type=str, default=None,
+                            help="The name of the group of atoms selected. \n"
+                                 "Default is None.")
 
-        args = parser.parse_known_args()
+        args, unknown = parser.parse_known_args()
 
         # decide to print help message
-        if len(sys.argv) < 2:
+        if len(sys.argv) < 3 :
             # no enough arguements, exit now
             parser.print_help()
             print("\nYou chose non of the arguement!\nDo nothing and exit now!\n")
@@ -187,31 +217,40 @@ class PdbIndex :
         return(args)
 
     def genGMXIndex(self):
+        '''
+        run geneIndex
+        initialize argument parser function.
+        :return:
+        '''
         args = self.arguements()
 
-        if len(args.res) == 2:
-            residueNdx = range(args.res[0], args.res[-1] + 1)
-        elif len(args.res) == 1:
-            residueNdx = range(args.res[0], args.res[0] + 1)
-        elif len(args.res) > 2:
-            residueNdx = args.res
+        if len(args.residueRange) == 2:
+            residueNdx = range(args.residueRange[0], args.residueRange[-1] + 1)
+        elif len(args.residueRange) == 1:
+            residueNdx = range(args.residueRange[0], args.residueRange[0] + 1)
+        elif len(args.residueRange) > 2:
+            residueNdx = args.residueRange
         else:
             print "\nNumber of residue id is not correct. \nExit Now. "
             sys.exit(1)
 
-        if args.dihedral != "NA":
+        if args.dihedralType :
 
-            atomlist, atomtype = self.atomList(args.dihedral)
+            atomlist, atomtype = self.atomList(args.dihedralType, args.atomname)
         else :
-            atomlist, atomtype = self.atomList(args.at)
+            atomlist, atomtype = self.atomList(args.atomtype, args.atomname)
+
         ## generate index
-        atomndx = self.res_index(args.pdb, args.chain,
-                                 residueNdx= args.res, atomList=atomlist,
-                                 atomtype=atomtype, dihedraltype=args.dihedral
+        atomndx = self.res_index(inpdb=args.pdbfile, chain=args.chainId,
+                                 residueNdx= args.residueRange, atomList=atomlist,
+                                 atomtype=atomtype, dihedraltype=args.dihedralType
                                  )
 
-        tofile = open(args.out, 'w')
-        tofile.write('[ %s_%d ] \n' % (args.chain, args.res[0]))
+        tofile = open(args.output, 'w')
+        if args.groupName :
+            tofile.write('[ %s ] \n' % (args.groupName.strip()))
+        else :
+            tofile.write('[ %s_%d_%d ] \n' % (args.chainId, args.residueRange[0], args.residueRange[-1]))
 
         if atomtype == "dihedral":
             for index in atomndx:
@@ -229,13 +268,14 @@ class PdbIndex :
             tofile.write(" \n")
             tofile.close()
 
-            if args.posres :
+            if args.positionRestraint:
                 with open('posres.itp', 'w') as tofile :
                     tofile.write("[ position_restraints ] \n; ai  funct  fcx    fcy    fcz  \n")
                     for atom in atomndx:
                         tofile.write("%12d  1  1000  1000  1000  \n" % int(atom))
 
         print("\nGenerating Index File Completed!")
+        return(1)
 
 class RewritePDB :
     def __init__(self, filename):
