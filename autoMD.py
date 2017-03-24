@@ -10,6 +10,7 @@ import math
 from glob import glob
 from collections import *
 import linecache
+import numpy as np
 
 class PdbIndex :
     '''
@@ -204,6 +205,10 @@ class PdbIndex :
         parser.add_argument('-gn','--groupName', type=str, default=None,
                             help="The name of the group of atoms selected. \n"
                                  "Default is None.")
+        parser.add_argument('-append', '--appendFile', default=True, type=bool,
+                            help="Append the group of index to the output file. \n"
+                                 "Options: True, False. \n"
+                                 "Default is True.")
 
         args, unknown = parser.parse_known_args()
 
@@ -245,8 +250,12 @@ class PdbIndex :
                                  residueNdx= args.residueRange, atomList=atomlist,
                                  atomtype=atomtype, dihedraltype=args.dihedralType
                                  )
-
-        tofile = open(args.output, 'w')
+        if args.appendFile :
+            append = 'a'
+        else :
+            append = 'wb'
+        tofile = open(args.output, append)
+        
         if args.groupName :
             tofile.write('[ %s ] \n' % (args.groupName.strip()))
         else :
@@ -875,6 +884,51 @@ class SummaryPDB :
 
         return(int(netCharge))
 
+    def centerOfMass(self, inputMol, atomNdx, obabelexe='obabel', molBox=False):
+        '''
+        Given a file (preferable PDB file format),
+            if not, the file will be convert into a pdb file,
+        and selected atom sequence number,
+        determine the COM of the coordinates
+
+        :param inputMol: a file, the input coordinates
+        :param atomNdx: a list, atom sequence number
+        :return: two lists, center of mass, format [0.0, 0.0, 0.0]
+                            boxsize, format [10.0, 10.0, 10.0]
+        '''
+        pdb = inputMol
+        if inputMol.split(".")[-1] not in ['pdb', 'pdbqt'] :
+            spdb = GenerateTop()
+            spdb.runObabel(obabelexe, inputMol, inputMol+".pdb")
+            pdb = inputMol + ".pdb"
+        coordinates = []
+
+        with open(pdb) as lines :
+            for s in lines :
+                if "ATOM" == s.split()[0] or "HETATM" == s.split()[0] and s.split()[1] in atomNdx :
+                    crd_list = []
+                    crd_list.append(float(s[30:38].strip()))
+                    crd_list.append(float(s[38:46].strip()))
+                    crd_list.append(float(s[46:54].strip()))
+                    coordinates.append(crd_list)
+
+        coordinates = np.asarray(coordinates)
+
+        xcenter = np.mean(coordinates[:, 0])
+        ycenter = np.mean(coordinates[:, 1])
+        zcenter = np.mean(coordinates[:, 2])
+
+        if molBox :
+            xsize = 2 * max(np.max(coordinates[:, 0]) - xcenter,
+                        np.abs(np.min(coordinates[:,0])-xcenter))
+            ysize = 2 * max(np.max(coordinates[:, 1]) - ycenter,
+                        np.abs(np.min(coordinates[:, 1]) - ycenter))
+            zsize = 2 * max(np.max(coordinates[:, 2]) - zcenter,
+                        np.abs(np.min(coordinates[:, 2]) - zcenter))
+        else :
+            xsize, ysize, zsize = 100, 100, 100
+        return([xcenter, ycenter, zcenter], [xsize, ysize, zsize])
+
     def details(self, verbose=False):
         chains = []
         resNdx = defaultdict(list)
@@ -1147,6 +1201,40 @@ class FixPBD :
 
         tofile.close()
 
+class MolDocking :
+    def __init__(self, method):
+        self.method = method
+
+    def runVina(self, vinaexe, receptor, ligand,
+                output='result.pdbqt', logfile='result.log',
+                ncpu=1, exhaustiveness=32,
+                center=[0,0,0], sizes=[40,40,40],
+                no_modes = 20, en_range = 5, seed=-1,
+                ):
+        try :
+            job = sp.Popen('%s --receptor %s --ligand %s '
+                           '--center_x %f --center_y %f --center_z %f '
+                           '--size_x %f --size_y %f --size_z %f '
+                           '--log %s --out %s --cpu %d '
+                           '--exhaustiveness %d --num_modes %d '
+                           '--energy_range %d --seed %d ' %
+                           (
+                               vinaexe, receptor, ligand,
+                               center[0], center[1], center[2],
+                               sizes[0], sizes[1], sizes[2],
+                               logfile, output, ncpu,
+                               exhaustiveness, no_modes,
+                               en_range, seed),
+                           shell= True
+                           )
+            job.communicate()
+            job.terminate()
+        except :
+            print("Docking molecule %s to %s using %s failed. \n"
+                  "Check your input and logfile.")
+
+        return(1)
+
 class PrepScripts :
     def __init__(self, qsubScriptSample):
         self.qsubMD = qsubScriptSample
@@ -1385,7 +1473,7 @@ if __name__ == "__main__" :
         sys.exit(1)
     else :
         if str(sys.argv[1]) == "index" :
-            print("Show help message: ")
+            #print("Show help message: ")
             index = PdbIndex()
             index.genGMXIndex()
         #if 1 :
