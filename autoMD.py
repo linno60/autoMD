@@ -2,6 +2,7 @@
 
 import os
 import sys
+import urllib2
 import time
 import argparse
 import subprocess as sp
@@ -11,6 +12,15 @@ from glob import glob
 from collections import *
 import linecache
 import numpy as np
+
+# import modeller for loop refinement
+try:
+    from modeller import *
+    from modeller.automodel import *
+    MODELLER_EXIST = True
+except ImportError :
+    print("Warning: Modeller is not well imported, some features may not work. ")
+    MODELLER_EXIST = False
 
 class PdbIndex :
     '''
@@ -667,7 +677,7 @@ class ExtractPDB :
 
         print "Finished!\n\n"
 
-    def extract_frame(self,filename, structname):
+    def extract_frame(self, filename, structname, no_frames=[]):
         lines = open(filename)
         print "The models of the pdb file is : "
         for s in lines :
@@ -675,10 +685,16 @@ class ExtractPDB :
                 print "    "+s[:-1]
         lines.close()
 
-        print "Which frames would you want to extract ? "
-        frames = raw_input("Input the frame number(s) here (multi numbers are accepted):  ")
+        if len(no_frames) :
+            try :
+                print "Which frames would you want to extract ? "
+                frames = raw_input("Input the frame number(s) here (multi numbers are accepted):  ")
+                frame_list = frames.split()
+            except :
+                print("You haven't select correct frames.")
+        else :
+            frame_list = no_frames
 
-        frame_list = frames.split()
         for frame_no in frame_list :
 
             lines  = open(filename)
@@ -701,6 +717,7 @@ class ExtractPDB :
             lines.close()
 
         print "Finished writing frames to separated files!\n\n"
+        return(1)
 
     def printinfor(self):
         print "What would you like to do now ?"
@@ -820,7 +837,7 @@ class ExtractPDB :
         return(options)
 
 class SummaryPDB :
-    def __init__(self, pdbfile, aminoLibFile):
+    def __init__(self, pdbfile, aminoLibFile=''):
         self.pdbfile = pdbfile
 
         resShortName = {}
@@ -980,7 +997,7 @@ class SummaryPDB :
                     print resNdx[chain][-10+j], "  ", resName[chain][-10+j]
         return chains, resNdx, resName, resAtom, resNameNdx
 
-    def summary(self, chain,verbose=False):
+    def summary(self, chain, verbose=False):
         chains, resNdx, resName, resAtom, resNameNdx = self.details()
 
         proteinSequence = {}
@@ -1069,7 +1086,7 @@ class SummaryPDB :
 
         return proteinSequence, missingResNdx, noProteinResNdx, noProteinResName, fullResNdx
 
-    def missingRes(self, chain, fastaSeq,verbose=False):
+    def missingRes(self, chain, fastaSeq, verbose=False):
         ## find the missing residues sequences in the pdb file
         #chains, resNdx, resName, resAtom, resNameNdx = self.details()
         proteinSequence, missingResNdx, noProteinResNdx, noProteinResName, fullResNdx = self.summary(chain)
@@ -1159,12 +1176,32 @@ class SummaryPDB :
         return extMissSeq
 
 class FixPBD :
-    def __init__(self, pdbin):
-        self.pdbin = pdbin
+    def __init__(self):
+        pass
 
-    def removeRegions(self, residuesNdx, chain, pdbout="temp_1.pdb"):
+    def pdbDownloader(self, pdbCode, pdbout):
+        if not os.path.exists(pdbCode + '.pdb'):
+            try :
+                source = urllib2.urlopen("http://www.rcsb.org/pdb/files/" + pdbCode + ".pdb")
+                with open(pdbCode + '.pdb', 'wb') as target:
+                    target.write(source.read())
+            except urllib2.URLError, e :
+                print e.args
+
+        return(1)
+
+    def removeRegions(self, filename, residuesNdx, chain, pdbout="temp_1.pdb", verbose=False):
+        '''
+        input a pdbfile, remove the selected residues
+
+        :param filename: input pdbfile
+        :param residuesNdx: the range of residue index for deleting
+        :param chain: which chain to perform delete
+        :param pdbout: the output pdb file name
+        :return: 1
+        '''
         tofile = open(pdbout,'w')
-        with open(self.pdbin) as lines :
+        with open(filename) as lines :
             for s in lines :
                 if s.split()[0] in ["ATOM", "HETATM" ] and s[21] == chain and int(s[22:26].strip()) in residuesNdx :
                     pass
@@ -1172,9 +1209,13 @@ class FixPBD :
                     tofile.write(s)
         tofile.close()
 
-        return 1
+        return(1)
 
-    def addModeledRegions(self, basepbd,modeledpdb, modelNdx, removeNdx, chain,pdbout="temp_2.pdb"):
+    def addModeledRegions(self, basepbd, modeledpdb,
+                          modelNdx, removeNdx, chain,
+                          pdbout="temp.pdb",
+                          verbose=False
+                          ):
         tofile = open(pdbout, 'w')
         with open(basepbd) as lines:
             for s in lines :
@@ -1200,6 +1241,164 @@ class FixPBD :
                     pass
 
         tofile.close()
+        return(1)
+
+    def addMissingAtoms(self, pdbin, pdb2pqrPy,
+                        ff='amber', pqrout='output.pqr',
+                        addhydrogen=True,
+                        ph=7.0, verbose=False ):
+        '''
+        add missing heavy atoms, and assign hydrogens according to the ph
+
+        :param pdbin:
+        :param pdb2pqrPy:
+        :param ff:
+        :param pqrout:
+        :param addhydrogen:
+        :param ph:
+        :return:
+        '''
+        if addhydrogen :
+            cmd = "python %s -ff %s --with-ph %f --ffout %s --chain %s %s " %\
+                  (pdb2pqrPy, ff, ph, ff+"_"+pqrout, pdbin, pqrout)
+        else :
+            cmd = "python %s -ff %s --ffout %s --chain %s %s " %\
+                  (pdb2pqrPy, ff, ff+"_"+pqrout, pdbin, pqrout)
+        job = sp.Popen(cmd, shell=True)
+        job.communicate()
+        job.kill()
+
+        return(ff+"_"+pqrout)
+
+    def addLoopsAutoModeller(self, pdbCode, chain1,
+                         alignCode, chain2,
+                         loopRange,
+                         verbose=False):
+        '''
+        model missing loop region
+        :param pdbCode:
+        :param chain1:
+        :param alignCode:
+        :param chain2:
+        :param loopRange:
+        :param verbose: print more information
+        :return: the final model pdb file
+        '''
+        if MODELLER_EXIST :
+            if verbose :
+                print("MODELLER exist, perform alignment and loop refinement.")
+                log.verbose()
+
+            for pdb in [pdbCode]+[alignCode] :
+                if not os.path.exists(pdb+'.pdb') :
+                    self.pdbDownloader(pdb, pdb+'.pdb')
+
+            env = environ()
+            # directories for input atom files
+            env.io.atom_files_directory = ['.', '../atom_files']
+
+            aln = alignment(env)
+            mdl_1 = model(env, file=pdbCode, model_segment=('FIRST:%s'%chain1, 'LAST:%s'%chain1))
+            aln.append_model(mdl_1, align_codes=pdbCode, atom_files=pdbCode+'.pdb')
+            mdl_2 = model(env, file=alignCode, model_segment=('FIRST:%s'%chain2, 'LAST:%s'%chain2))
+            aln.append_model(mdl_2, align_codes=alignCode, atom_files=alignCode+'.pdb')
+            aln.align2d()
+            aln.write(file='alignment.ali', alignment_format='PIR')
+
+            """ select missing loop residues for modeling only"""
+            class MyModel(automodel):
+                # overide select_atom function, select only some residues
+                def select_atoms(self):
+                    # Select residues loopRange[0] to loopRange[1] (PDB numbering)
+                    return selection(self.residue_range(str(loopRange[0])+":"+str(chain1),
+                                                        str(loopRange[1])+":"+str(chain1)
+                                                        )
+                                     )
+
+            a = MyModel(env,
+                        alnfile='alignment.ali',
+                        knowns=alignCode,
+                        sequence=pdbCode,
+                        )
+            # a.auto_align()
+            # get an automatic loop building
+            a.make()
+
+            # obtain successfully modeled pdb file names
+            ok_models = [x for x in a.outputs if x['failure'] is None]
+
+            # Rank the models by DOPE score
+            key = 'DOPE score'
+            if sys.version_info[:2] == (2, 3):
+                # Python 2.3's sort doesn't have a 'key' argument
+                ok_models.sort(lambda a, b: cmp(a[key], b[key]))
+            else:
+                ok_models.sort(key=lambda a: a[key])
+
+            # Get top model
+            finalPDB = ok_models[0]
+            if verbose :
+                print("Top model: %s (DOPE score %.3f)" % (finalPDB['name'], finalPDB[key]))
+
+            return(finalPDB)
+        else :
+            if verbose :
+                print("No model built!")
+            return(pdbCode+'.pdb')
+
+class CleanPDB :
+    '''
+    Prepare the pdb file, add missing atoms, add hydrogens, add missing loops
+    '''
+    def __init__(self, filename, obabel='obabel'):
+        self.pdb = filename
+        # the input file is not a pdb, or pdbqt file, use obabel convert it
+        if filename.split(".")[-1] not in ["pdb","pdbqt"] :
+            gpdb = GenerateTop()
+            gpdb.runObabel(obabelexe=obabel, input=filename, output=filename+".pdb")
+            self.pdb = filename+".pdb"
+    def extractFrame(self, frame=1, headersave=True) :
+        '''
+        extract a frame (default is first) of the pdb file
+
+        :param frame:
+        :param headersave:
+        :return: the specific frame from a large pdb file
+        '''
+        extractPDB = ExtractPDB()
+        extractPDB.extract_frame(self.pdb, self.pdb[:-5]+"_%d.pdb"%frame, no_frames=[frame])
+        return(self.pdb[:-5]+"_%d.pdb"%frame)
+
+    def removeHETATM(self, filename, hetatmsave=['WAT','HOH'], dropWater=True,
+                     cleanedPDB='cleaned_', headersave=True,
+                     selectedChains = [],
+                     ):
+        '''
+        :param filename:
+        :param hetatmsave:
+        :param dropWater: remove water molecules
+        :param cleanedPDB:
+        :param headersave: save the pdb header information
+        :param selectedChains:
+        :return: the pdbfile after removing unnecessary information
+        '''
+        tofile = open(cleanedPDB+filename, 'wb')
+        with open(filename) as lines :
+            for s in lines :
+                if len(s.split()) > 0 and \
+                                s.split()[0] in ['ATOM', 'HETATM', 'TER', 'END', 'ENDMDL'] :
+                    if dropWater :
+                        if s[21] in selectedChains and s[17:20].strip() not in ['HOH', 'WAT'] \
+                                and s[17:20].strip() in hetatmsave :
+                            tofile.write(s)
+                    else :
+                        if s[21] in selectedChains and s[17:20].strip() in hetatmsave :
+                            tofile.write(s)
+                else :
+                    if headersave :
+                        tofile.write(s)
+
+        return(cleanedPDB+filename)
 
 class MolDocking :
     def __init__(self, method):
