@@ -1086,7 +1086,7 @@ class SummaryPDB :
 
         return proteinSequence, missingResNdx, noProteinResNdx, noProteinResName, fullResNdx
 
-    def missingRes(self, chain, fastaSeq, verbose=False):
+    def missingRes(self, chain, fastaSeq='', matchNum=10, pdbCode='', verbose=False,):
         ## find the missing residues sequences in the pdb file
         #chains, resNdx, resName, resAtom, resNameNdx = self.details()
         proteinSequence, missingResNdx, noProteinResNdx, noProteinResName, fullResNdx = self.summary(chain)
@@ -1101,15 +1101,25 @@ class SummaryPDB :
                         #print s #strip()
                         fastaseq += s.strip()
         #print fastaseq
-        else :
+        elif len(fastaSeq) > 4 :
             fastaseq = fastaSeq
+
+        else :
+            fastaseq = self.downloadFasta(pdbCode, chain=chain)
+
+        # align the fasta sequence with the protein residue sequences
+        startMatch, matchedFastaSeq = proteinSequence[chain][: matchNum], fastaseq
+        for i in range(len(fastaseq)-matchNum) :
+            if fastaseq[i:i+matchNum] == startMatch :
+                matchedFastaSeq = fastaseq[i:]
+                break
 
         # print protein missing residue information
         startndx = fullResNdx[chain][0]
         for index in missingResNdx[chain] :
             if chain not in trueResName.keys() :
                 trueResName[chain] = []
-            trueResName[chain].append(fastaseq[int(index)-startndx]+'_'+index)
+            trueResName[chain].append(matchedFastaSeq[int(index)-startndx]+'_'+index)
 
         ranges = []
         siteRange = []
@@ -1122,7 +1132,7 @@ class SummaryPDB :
                 pass
             elif brokenSeq[i] == '-' :
                 siteRange.append(currentResNdx)
-                missedRSeq += fastaseq[i]
+                missedRSeq += matchedFastaSeq[i]
                 #print missedRSeq
             elif brokenSeq[i] != '-' and len(siteRange) > 0 :
                 ranges.append([siteRange[0],siteRange[-1]])
@@ -1139,13 +1149,13 @@ class SummaryPDB :
             ## print full sequence information
             print "The fasta sequence of the full protein chain is: "
             print "Chain  ", chain
-            sections = math.ceil(float(len(fastaseq)) / 20.0)
+            sections = math.ceil(float(len(matchedFastaSeq) / 20.0))
 
             for i in range(int(sections-1)) :
                 print fullResNdx[chain][i*20], " "*(-len(str(fullResNdx[chain][i*20]))+11), fullResNdx[chain][i*20+10]
-                print fastaseq[i*20 : i*20+10], " ",fastaseq[i*20+10 : i*20+20]
+                print matchedFastaSeq[i*20 : i*20+10], " ",matchedFastaSeq[i*20+10 : i*20+20]
             print fullResNdx[chain][i*20+20]
-            print fastaseq[i*20+20:]
+            print matchedFastaSeq[i*20+20:]
 
             ## print the true residue name
             print "\nThe missing residues are :"
@@ -1156,7 +1166,7 @@ class SummaryPDB :
                 print (("%12s   %-s ")%(ndxrange, missedSeqsList[ndxrange]))
 
 
-        return fastaseq, missedSeqsList, fullResNdx
+        return matchedFastaSeq, missedSeqsList, fullResNdx
 
     def extendMissRange(self, chain, fastaSeq, extend=10, verbose=False):
         extMissSeq = {}
@@ -1175,7 +1185,57 @@ class SummaryPDB :
 
         return extMissSeq
 
-class FixPBD :
+    def downloadFasta(self, pdbCode='', uniportID='', chain='A', writeFasta=True):
+        '''
+        download fasta sequence from RCSB or UniPort
+        :param pdbCode:
+        :param uniportID:
+        :param chain:
+        :param writeFasta:
+        :return: the fasta sequence of a protein chain
+        '''
+        fastaSeq, url = '', ''
+        if writeFasta :
+            tofile = open(pdbCode+"_"+chain+".fasta","wb")
+
+        if len(pdbCode) == 4 :
+            try :
+                url = 'http://www.rcsb.org/pdb/files/fasta.txt?structureIdList=%s' % pdbCode
+            except :
+                print("Fasta Sequence of %s download failed."%pdbCode)
+        elif len(uniportID)  :
+            try :
+                url = 'http://www.uniport.org/uniport/%s.fasta' % uniportID
+            except:
+                print("Fasta Sequence of %s download failed." % uniportID)
+        if len(url) :
+            f = urllib2.urlopen(url)
+            data = f.read()
+            condition = False
+            if len(pdbCode) == 4 :
+                for item in data.split("\n") :
+                    if ">" in item and item.split(":")[1][0] == chain :
+                        condition = True
+                    elif ">" in item and item.split(":")[1][0] != chain :
+                        condition = False
+                    else :
+                        pass
+
+                    if condition and '>' not in item :
+                        fastaSeq += item
+
+                    if condition and writeFasta :
+                        tofile.write(item+"\n")
+            else :
+                tofile.write(data)
+                for item in data.split("\n") :
+                    if ">" not in item :
+                        fastaSeq += item
+
+            tofile.close()
+
+        return fastaSeq
+class FixPDB :
     def __init__(self):
         pass
 
@@ -1189,6 +1249,155 @@ class FixPBD :
                 print e.args
 
         return(1)
+
+    def saveHETATM(self, pdbin, chain=['A'], waterOnly=False):
+        '''
+
+        :param pdbin:
+        :param chain:
+        :param waterOnly: only save water molecule
+        :return:
+        '''
+        with open(pdbin+"_HETATM", 'wb') as tofile :
+            try :
+                with open(pdbin) as lines :
+                    for s in lines :
+                        if len(s.split()) \
+                                and s.split()[0] == "HETATM" \
+                                and s[21] in chain :
+                            if waterOnly and s[17:20].strip() in ["WAT","HOH"]:
+                                tofile.write(s)
+                            else :
+                                tofile.write(s)
+            except IOError :
+                print("File %s not exist \n"% pdbin)
+
+        return (pdbin + "_HETATM")
+
+    def saveLigand(self, pdbin, chain, ligCode) :
+        with open(pdbin + "_Ligand", 'wb') as tofile :
+            try:
+                with open(pdbin) as lines:
+                    for s in lines:
+                        if len(s.split()) \
+                                and s.split()[0] in ["HETATM","ATOM"] \
+                                and s[21] in chain\
+                                and s[17:20].strip() == ligCode :
+                            tofile.write(s)
+
+            except IOError:
+                print("File %s not exist \n" % pdbin)
+
+        return (pdbin + "_Ligand")
+
+    def checkCrash(self, pdbfiles, cutoff,
+                   loopRange, ligandRange,
+                   chainLoop, chainLigand,
+                   maxCoordinate=10
+                   ):
+        '''
+        check number of contacts between the newly modeled loop with the ligand
+        if too many contacts, crashes are existed
+
+        :param pdbfiles:
+        :param cutoff:
+        :param loopRange:
+        :param ligandRange:
+        :param chainLoop:
+        :param chainLigand:
+        :param maxCoordinate:
+        :return: coordination number ( number of contacts)
+        '''
+        cmap = ContactMap(pdbfiles[0])
+        coordinate = 0
+
+        pdblist = []
+        for item in pdbfiles :
+            if '.pdb' not in item :
+                if os.path.exists(item+'.pdb') :
+                    pdblist.append(item+'.pdb')
+                elif os.path.exists(item + '.pdbqt'):
+                    pdblist.append(item + '.pdbqt')
+                else :
+                    print("File %s not found! "%item)
+            else :
+                pdblist.append(item)
+
+        #try :
+        coordinate = cmap.coordinationNumber(pdblist, cutoff,
+                                            range(loopRange[0], loopRange[-1]+1),
+                                            range(ligandRange[0], ligandRange[-1]+1),
+                                            [chainLoop, chainLigand],
+                                            ['heavy','all'],
+                                            False, maxCoordinate
+                                            )
+        #except IOError:
+            #print("Calculate coordination number between receptor and ligand failed!")
+
+        return (coordinate)
+
+    def addLoopLOOPY(self, pdbin,
+                          loopRange,
+                          loopSeq,
+                          loopchain,
+                          loopyexe='loopy',
+                          num_mode = 10,
+                          iteration=200,
+                          ligandName='',
+                          ligandNdx=1,
+                          ligandchain='',
+                          verbose=False
+                          ):
+        '''
+        perform loop building with LOOPY
+        LOOPY: https://honiglab.c2b2.columbia.edu/software/Jackal/Jackalmanual.htm#loopy
+        Usage: ./loopy -o=900-908 -r=ALSVEFPEM -n=10 -i=200 2ovh.pdb -c=A > 2ovh_899_909
+
+        Notes: in the process of loop modeling, the Ligand and the HETATM atom records are
+        all lost. thus if you intend to keep them, you could save them ahead using the
+        self.saveLigand and self.saveHETATM methods
+
+        :param pdbin:
+        :param loopRange:
+        :param loopSeq:
+        :param loopyexe:
+        :param verbose:
+        :return:
+        '''
+
+        cmd = "%s -o=%d-%d -r=%s -n=%d -i=%d -c=%s %s > %s_adding_loop_%d_%d.log" % \
+              (
+                  loopyexe, loopRange[0], loopRange[1], loopSeq,
+                  num_mode, iteration,
+                  loopchain, pdbin, pdbin,
+                  loopRange[0], loopRange[1]
+              )
+        if not verbose :
+            cmd += " > /dev/null 2>&1 "
+
+        output = sp.check_output(cmd, shell=True)
+        finalModel = pdbin + "_looper_0.pdb"
+        if verbose :
+            print(output)
+
+        model_crash = {}
+        for i in range(num_mode) :
+            model =  pdbin + "_looper_" + str(i) + ".pdb"
+            # check crash. Search for any crash for the loop and the ligand.
+            crash = self.checkCrash([model, pdbin], 1.5, loopRange, [ligandNdx,], loopchain, ligandchain, 10)
+            model_crash[model] = crash
+        model_crash = OrderedDict(sorted(model_crash.items(), key=lambda x: x[1], reverse=False))
+
+        if verbose :
+            print("Checking crash in the LOOPY models ")
+            print(model_crash)
+
+        if model_crash.values()[0] >10 :
+            print("Warning: the LOOPY model %s is not perfect, crashes occur! ")
+
+        finalModel = model_crash.keys()[0]
+
+        return (finalModel)
 
     def removeRegions(self, filename, residuesNdx, chain, pdbout="temp_1.pdb", verbose=False):
         '''
@@ -1270,7 +1479,7 @@ class FixPBD :
 
         return(ff+"_"+pqrout)
 
-    def addLoopsAutoModeller(self, pdbCode, chain1,
+    def addLoopsAutoModel(self, pdbCode, chain1,
                          alignCode, chain2,
                          loopRange,
                          verbose=False):
@@ -1325,26 +1534,145 @@ class FixPBD :
             a.make()
 
             # obtain successfully modeled pdb file names
-            ok_models = [x for x in a.outputs if x['failure'] is None]
+            return (self.selectBestModeller(a.outputs))
 
-            # Rank the models by DOPE score
-            key = 'DOPE score'
-            if sys.version_info[:2] == (2, 3):
-                # Python 2.3's sort doesn't have a 'key' argument
-                ok_models.sort(lambda a, b: cmp(a[key], b[key]))
-            else:
-                ok_models.sort(key=lambda a: a[key])
+    def addLoopsSimpleModel(self, pdbIn, chain1,
+                            fastaSeq,
+                            loopRanges,
+                            no_lig=0,
+                            verbose=False
+                            ):
+        '''
+        add loop using no template
+        :param pdbIn:
+        :param chain1:
+        :param fastaSeq:
+        :param loopRanges:
+        :param no_lig:
+        :param verbose:
+        :return:
+        '''
+        if pdbIn[-4:] == ".pdb" :
+            pdbIn = pdbIn[:-4]
 
-            # Get top model
-            finalPDB = ok_models[0]
-            if verbose :
-                print("Top model: %s (DOPE score %.3f)" % (finalPDB['name'], finalPDB[key]))
+        env = environ()
+        env.io.atom_files_directory = ['.', '../atom_files']
 
-            return(finalPDB)
-        else :
-            if verbose :
-                print("No model built!")
-            return(pdbCode+'.pdb')
+        if verbose :
+            log.verbose()
+
+        m = model(env, file=pdbIn)
+        aln = alignment(env)
+        aln.append_model(m, align_codes=pdbIn)
+        aln.write(file=pdbIn + '.seq')
+
+        ## add full sequence into the alignment file
+        with open("alignment.ali",'wb') as tofile :
+            with open(pdbIn + '.seq') as lines :
+                tofile.write(lines)
+            tofile.write('\nP1;%s_fill \n'%pdbIn)
+            tofile.write('sequence::::::::: \n')
+            for i in range(len(fastaSeq)) :
+                tofile.write(fastaSeq[i])
+                if i % 74 == 0 and i != 0 :
+                    tofile.write("\n")
+
+            tofile.write("%s"%"."*no_lig)
+            tofile.write("*\n")
+
+        class MyModel(automodel):
+            def select_atoms(self):
+                s = []
+                for i in range(len(loopRanges)) :
+                    s.append(selection(self.residue_range(
+                        str(loopRanges[i][0]),
+                        str(loopRanges[i][1])))
+                    )
+                return s
+
+        a = MyModel(env, alnfile='alignment.ali', knowns = pdbIn, sequence = pdbIn+"_fill")
+        a.starting_model = 1
+        a.ending_model = 1
+        #a.loop.md_level = refine.fast
+
+        a.make()
+
+        # obtain successfully modeled pdb file names
+        return (self.selectBestModeller(a.outputs))
+
+    def addLoopRefineModel(self, pdbIn, chain1,
+                            fastaSeq,
+                            loopRanges,
+                            no_lig=0,
+                            verbose=False):
+        '''
+        model the loops and refine them without any templates
+        :param pdbIn:
+        :param chain1:
+        :param fastaSeq:
+        :param loopRanges:
+        :param no_lig:
+        :param verbose:
+        :return: the file name of the best model
+        '''
+        env = environ()
+        if verbose :
+            log.verbose()
+
+        m = model(env, file=pdbIn)
+        aln = alignment(env)
+        aln.append_model(m, align_codes=pdbIn)
+        aln.write(file=pdbIn + '.seq')
+
+        ## add full sequence into the alignment file
+        with open("alignment.ali", 'wb') as tofile:
+            with open(pdbIn + '.seq') as lines:
+                for s in lines :
+                    if s[:-1] == "*" and s[0] != ">" :
+                        tofile.write(s[:-1]+"."*no_lig+"*\n")
+                    else :
+                        tofile.write(s)
+            tofile.write('\nP1;%s_fill \n' % pdbIn)
+            tofile.write('sequence::::::::: \n')
+            for i in range(len(fastaSeq)):
+                tofile.write(fastaSeq[i])
+                if i % 74 == 0 and i != 0:
+                    tofile.write("\n")
+
+            tofile.write("%s" % "." * no_lig)
+            tofile.write("*\n")
+
+        a = loopmodel(env, alnfile='alignment.ali', knowns = pdbIn , sequence = pdbIn+'_fill')
+
+        a.starting_model = 1
+        a.ending_model = 1
+
+        a.loop.starting_model =  1
+        a.loop.ending_model = 10
+        a.loop.md_level = refine.fast
+
+        a.make()
+
+        # obtain successfully modeled pdb file names
+        return self.selectBestModeller(a.outputs)
+
+    def selectBestModeller(self, modellerOutput, verbose=False):
+        # obtain successfully modeled pdb file names
+        ok_models = [x for x in modellerOutput if x['failure'] is None]
+
+        # Rank the models by DOPE score
+        key = 'DOPE score'
+        if sys.version_info[:2] == (2, 3):
+            # Python 2.3's sort doesn't have a 'key' argument
+            ok_models.sort(lambda a, b: cmp(a[key], b[key]))
+        else:
+            ok_models.sort(key=lambda a: a[key])
+
+        # Get top model
+        finalPDB = ok_models[0]
+        if verbose:
+            print("Top model: %s (DOPE score %.3f)" % (finalPDB['name'], finalPDB[key]))
+        return (finalPDB)
 
 class CleanPDB :
     '''
@@ -1369,7 +1697,7 @@ class CleanPDB :
         extractPDB.extract_frame(self.pdb, self.pdb[:-5]+"_%d.pdb"%frame, no_frames=[frame])
         return(self.pdb[:-5]+"_%d.pdb"%frame)
 
-    def removeHETATM(self, filename, hetatmsave=['WAT','HOH'], dropWater=True,
+    def processHETATM(self, filename, hetatmsave=['WAT','HOH'], dropWater=True,
                      cleanedPDB='cleaned_', headersave=True,
                      selectedChains = [],
                      ):
@@ -1401,8 +1729,8 @@ class CleanPDB :
         return(cleanedPDB+filename)
 
 class MolDocking :
-    def __init__(self, method):
-        self.method = method
+    def __init__(self):
+        pass
 
     def runVina(self, vinaexe, receptor, ligand,
                 output='result.pdbqt', logfile='result.log',
@@ -1410,6 +1738,23 @@ class MolDocking :
                 center=[0,0,0], sizes=[40,40,40],
                 no_modes = 20, en_range = 5, seed=-1,
                 ):
+        '''
+        perform molecular docking using autodock vina
+
+        :param vinaexe: executable vina binary file
+        :param receptor: receptor name in pdbqt format
+        :param ligand: ligand file name in pdbqt format
+        :param output: ligand binding pose, in pdbqt format
+        :param logfile: docking results log
+        :param ncpu: number of cups
+        :param exhaustiveness: how accurate
+        :param center: binding pocket center
+        :param sizes: size of the binding pocket
+        :param no_modes: output number of modes
+        :param en_range: energy range
+        :param seed: random seed
+        :return:
+        '''
         try :
             job = sp.Popen('%s --receptor %s --ligand %s '
                            '--center_x %f --center_y %f --center_z %f '
@@ -1431,6 +1776,9 @@ class MolDocking :
         except :
             print("Docking molecule %s to %s using %s failed. \n"
                   "Check your input and logfile.")
+
+            job = sp.check_output('%s --help'%vinaexe)
+            print(job)
 
         return(1)
 
@@ -1546,6 +1894,283 @@ class AutoRunMD :
             job.communicate()
 
         return(outTprFile[-4:]+".gro")
+
+class ContactMap:
+    def __init__(self, hugePDBFile) :
+        self.mfPDB = hugePDBFile
+
+    def splitPdbFile(self):
+
+        if 'S_1.pdb' in os.listdir('./') :
+            filelist = glob.glob('S_*.pdb')
+
+        else :
+            filelist = []
+            with open(self.mfPDB) as lines :
+                for s in lines :
+                    if "MODEL" == s.split()[0] :
+                        no_model = s.split()[1]
+                        tofile = open("S_"+no_model+".pdb",'wb')
+                        filelist.append("S_"+no_model+".pdb")
+                        tofile.write(s)
+                    elif "ATOM" == s.split()[0] :
+                        tofile.write(s)
+
+                    elif "ENDMDL" in s :
+                        tofile.write(s)
+
+                        tofile.close()
+                    else :
+                        pass
+
+        print "PDB File spliting finished! \n"
+        return filelist
+
+    def switchFuction(self, x, d0, m=12, n=6):
+        # for countting, implement a rational switch function to enable a smooth transition
+        # the function is lik  s= [1 - (x/d0)^6] / [1 - (x/d0)^12]
+        # d0 is a cutoff
+        y = (1.0 - math.pow((x / d0), n)) / (1.0 - math.pow((x / d0), m))
+        return y
+
+    def getResIndex(self, singleFramePDB, chain, resIdList) :
+        '''
+        read in a pdb file, return the residueNdx_chain information
+        :param singleFramePDB:
+        :param chain:
+        :param resIdList:
+        :return:
+        '''
+        lines = open(singleFramePDB)
+        indexlist = []
+        for s in lines :
+            if "ATOM" in s and s[21] == chain and int(s[22:26].strip()) in resIdList :
+                resIndex = s[22:28].strip() + '_'+chain
+                if resIndex not in indexlist :
+                    indexlist.append(resIndex)
+        lines.close()
+        return indexlist
+
+    def findAtomType(self, information, singleFramePDB):
+        atomType = []
+
+        if information in ['Alpha-Carbon','CA','alpha','Ca','Alpha'] :
+            atomType = ['CA']
+        elif information in ['main','mainchain', 'Mainchain','MainChain'] :
+            atomType = ['CA', 'N', 'C', 'O']
+        elif information in ['back','backbone', 'Backbone','BackBone'] :
+            atomType = ['CA', 'N']
+
+        elif information in ['noH','non-H', 'non-hydrogen', 'Non-H', 'no-h', 'heavy', 'heavy-atom'] :
+            with open(singleFramePDB) as lines :
+                for s in lines :
+                    if len(s.split()) and s.split()[0] in ['ATOM','HETATM'] and s.split()[2] not in atomType and s[13] != "H" and s[-1] != "H" :
+                        atomType.append(s[12:16].strip())
+
+        elif information in ['all','all-atom','All-Atom','ALL'] :
+            with open(singleFramePDB) as lines :
+                for s in lines :
+                    if len(s.split()) and s.split()[0] in ['ATOM','HETATM'] and s.split()[2] not in atomType :
+                        atomType.append(s[12:16].strip())
+        else :
+            print "Error! AtomType not correct. Exit Now! \n"
+            sys.exit(1)
+
+        return atomType
+
+    def getPdbCrd(self, singleFramePDB, atomType, resList) :
+        # input a pdb file return the atom crds in each residue
+        # in a dictionary format
+        resCrdDict = defaultdict(list)
+
+        with open(singleFramePDB) as lines :
+            for s in lines:
+                if "ATOM" in s and "TER" not in s :
+                    resIndex = s[22:28].strip() + '_' + s[21]
+    #                #if s.split()[2] in atomType and resIndex in resList :
+                    # non-hydrogen bonds
+                    if s.split()[2] in atomType and resIndex in resList :
+                        #resIndex = s.split()[4 + len(s[21].strip())] + '_' + s[21]
+                        if resIndex not in resCrdDict.keys() :
+                            resCrdDict[resIndex] = []
+                        crd_list = []
+                        crd_list.append(float(s[30:38].strip()))
+                        crd_list.append(float(s[38:46].strip()))
+                        crd_list.append(float(s[46:54].strip()))
+
+                        resCrdDict[resIndex].append(crd_list)
+
+        lines.close()
+        ## resCrdDist format : {'123':[[0.0,0.0,0.0],[]]}
+        return resCrdDict
+
+    def coordinationNumber(self, pdbfiles, cutoff,
+                           rResNdxs, lResNdxs,
+                           chains,
+                           atomTypes=['heavy', 'all'],
+                           switch=False,
+                           maxCoordinate=100,
+                           ):
+        '''
+        check coordinate number (contact number) between receptor and ligand
+        :param pdbfiles:
+        :param cutoff:
+        :param rResNdxs:
+        :param lResNdxs:
+        :param chains:
+        :param atomTypes:
+        :param switch:
+        :param maxCoordinate:
+        :return:
+        '''
+        coordinate = 0.0
+
+        rec_atomtype = self.findAtomType( atomTypes[0],pdbfiles[0])
+        lig_atomtype = self.findAtomType( atomTypes[-1],pdbfiles[-1])
+
+        rec_Crds = self.getPdbCrd(pdbfiles[0], rec_atomtype, rResNdxs)
+        lig_Crds = self.getPdbCrd(pdbfiles[-1], lig_atomtype, lResNdxs)
+
+        for rec_Res in rec_Crds.keys() :
+            for lig_Res in lig_Crds.keys() :
+                for crd1 in rec_Crds[rec_Res] :
+                    for crd2 in lig_Crds[lig_Res] :
+                        distance = 0.0
+                        crd1 = np.asarray(crd1)
+                        crd2 = np.asarray(crd2)
+                        distance = np.sum((crd1 - crd2) ** 2)
+                        count = 1.0
+
+                        if switch :
+                            count = self.switchFuction(distance, cutoff*2)
+
+                        if distance <= cutoff :
+                            coordinate += count
+
+                        if coordinate >= maxCoordinate :
+                            return(coordinate)
+
+        return(coordinate)
+
+    def contactMap(self, pdbFileList, cutoff, cmapName,
+                   rchainRes, lchainRes, switch,
+                   atomType = [["CA",]],
+                   rank=0
+                   ):
+        distCutOff = cutoff * cutoff   ###  square of cutoff
+        MaxDistCutoff = distCutOff * 16
+
+        if len(atomType[0]) > 1 or len(atomType[1]) > 1 :
+            condition = True
+        else :
+            condition = False
+
+        #print "Condition ", condition
+
+        if len(pdbFileList) == 0 :
+            #raise Exception("Boo! \nNot find PDB files for calculation! ")
+            print 'Exit Now!'
+            sys.exit(1)
+
+        ### identify all the residue index
+        resIndexList1 = []
+        for chain in rchainRes.keys() :
+            resIndexList1 += self.getResIndex(pdbFileList[0], chain, rchainRes[chain])
+        #print resIndexList1
+        resIndexList2 = []
+        for chain in lchainRes.keys() :
+            resIndexList2 += self.getResIndex(pdbFileList[0], chain, lchainRes[chain])
+        #print resIndexList2
+
+        ### start calculate all the pdbfile residue c alpha contact
+        contCountMap = OrderedDict()
+        progress = 0
+        for pdbfile in pdbFileList :
+            progress += 1
+            print "Rank %d Progress: The %dth File %s out of total %d files" %\
+                  (rank, progress, pdbfile, len(pdbFileList))
+            resCrdDict1 = self.getPdbCrd(pdbfile, atomType[0], resIndexList1)
+            #print resCrdDict1
+
+            resCrdDict2 = self.getPdbCrd(pdbfile, atomType[1], resIndexList2)
+
+            #print resCrdDict1
+
+            for m in resIndexList1 :
+                for n in resIndexList2 :
+                    id = m +"+" + n
+                    print id
+                    if id not in contCountMap.keys() :
+                        contCountMap[id] = 0.0
+                    ### compute the distance between any combination of
+                    ### of residue indexes and compare with cutoff square
+                    count = 0.0
+                    for crd1 in resCrdDict1[m] :
+#                        distance = 0.0
+                        for crd2 in resCrdDict2[n] :
+                            distance = 0.0
+                            crd1 = np.asarray(crd1)
+                            crd2 = np.asarray(crd2)
+                            distance = np.sum((crd1 - crd2)**2)
+                            #print id, "distance ", distance
+                            #print "distance distance ", distance
+
+                            if distance > MaxDistCutoff * 25 :
+                                #print "Break ", n, m
+                                break
+
+                            else :
+                                #print "ATOMTYPE", atomType[0], atomType
+                                #if  1 : #atomType[0] == "CA" : #and atomType[1] in ['CA', 'Ca', 'ca', 'alpha-C', 'Calpha'] :
+                                #print "CA " * 10
+
+                                if not condition :
+                                    if switch in ['T', 'True', 't', 'TRUE', 'true'] and distance <= MaxDistCutoff :
+                                        contCountMap[id] += \
+                                            self.switchFuction(math.sqrt(distance), cutoff*2.0)
+                                        #print "Counting", contCountMap[id],  distance
+
+                                    elif distance <= distCutOff :
+                                        contCountMap[id] += 1.0
+
+                                else :
+                                    if distance <= distCutOff:
+                                        count += 1.0
+
+                                if condition and count >= 2.0 :
+                                    contCountMap[id] += 1.0
+                                    #print "id ", id, " counts 1"
+                                    break
+
+                        if distance > MaxDistCutoff * 25 :
+                            #print "MAX Distance", distance
+                            break
+
+                        if count >= 2.0 :
+                            break
+
+            print "PDB file "+str(pdbfile)+" Finished!"
+            #print contCountMap[id]
+
+        # generate contact matrix file
+        result = open(str(rank)+"_"+cmapName,'wb')
+        result.write("NDX  ")
+        for i in resIndexList1 :
+            result.write('%5s '%str(i))
+
+        #print contCountMap.keys()
+        for j in resIndexList2 :
+            result.write('\n%5s '%str(j))
+            for k in resIndexList1 :
+                result.write('%8.1f '% (contCountMap[k+'+'+j] / len(pdbFileList)))
+
+        result = open(str(rank)+"_"+cmapName+'.xyz', 'wb')
+        result.write("# Receptor Ligand Contact_probability \n")
+        for i in resIndexList1:
+            for j in resIndexList2:
+                result.write('%5s  %5s  %8.1f \n' % (i, j, contCountMap[i+'+'+j]/ len(pdbFileList)))
+
+        return contCountMap.keys(), contCountMap.values(), resIndexList1, resIndexList2
 
 def runExtract() :
     '''
