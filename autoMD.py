@@ -1235,6 +1235,7 @@ class SummaryPDB :
             tofile.close()
 
         return fastaSeq
+
 class FixPDB :
     def __init__(self):
         pass
@@ -1380,22 +1381,34 @@ class FixPDB :
         if verbose :
             print(output)
 
-        model_crash = {}
+        model_crash = OrderedDict()
         for i in range(num_mode) :
             model =  pdbin + "_looper_" + str(i) + ".pdb"
             # check crash. Search for any crash for the loop and the ligand.
             crash = self.checkCrash([model, pdbin], 1.5, loopRange, [ligandNdx,], loopchain, ligandchain, 10)
             model_crash[model] = crash
-        model_crash = OrderedDict(sorted(model_crash.items(), key=lambda x: x[1], reverse=False))
+
+        #model_crash = OrderedDict(sorted(model_crash.items(), key=lambda x: x[1], reverse=False))
+        #crashIndx = 0
+        key = pdbin + "_looper_" + str(i) + ".pdb"
+        for key in model_crash.keys():
+            if model_crash[key] <= 1.0 :
+                finalModel = key
+                break
+            else :
+                pass
+        if key == len(model_crash.keys()[-1]) :
+            model_crash = OrderedDict(sorted(model_crash.items(), key=lambda x: x[1], reverse=False))
+            finalModel = model_crash.keys()[0]
 
         if verbose :
             print("Checking crash in the LOOPY models ")
             print(model_crash)
 
-        if model_crash.values()[0] >10 :
+        if model_crash.values()[0] > 10.0 :
             print("Warning: the LOOPY model %s is not perfect, crashes occur! ")
 
-        finalModel = model_crash.keys()[0]
+        #finalModel = model_crash.keys()[0]
 
         return (finalModel)
 
@@ -1773,7 +1786,7 @@ class MolDocking :
                            )
             job.communicate()
             job.terminate()
-        except :
+        except IOError :
             print("Docking molecule %s to %s using %s failed. \n"
                   "Check your input and logfile.")
 
@@ -1781,6 +1794,34 @@ class MolDocking :
             print(job)
 
         return(1)
+
+    def rankVinaResults(self, logfileList):
+        '''
+        obtain the binding energy score from vina log files
+
+        :param logfileList:
+        :return: a list of tuples, each key matches with a result list (top 3 results)
+        '''
+        vinaResults = defaultdict(list)
+
+        for resultfile in logfileList :
+            condition = -1
+            vinaResults[resultfile] = []
+            with open(resultfile) as lines :
+                for s in lines :
+
+                    if "Refining results ... done" in s :
+                        condition += 1
+                    elif "affinity" in s :
+                        condition += 1
+                    else :
+                        pass
+
+                    if condition :
+                        if len(s.split()) and s.split()[0] in ['1','2','3'] :
+                            vinaResults[resultfile].append(float(s.split()[1]))
+
+        return(sorted(vinaResults.items(), key=lambda x: x[1]))
 
 class PrepScripts :
     def __init__(self, qsubScriptSample):
