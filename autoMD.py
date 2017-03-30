@@ -160,7 +160,7 @@ class PdbIndex :
         tofile.close()
         return(1)
 
-    def arguements(self) :
+    def arguments(self) :
         d = '''
         ################################################################
         # Generate GMX Index from a PDB file
@@ -224,9 +224,9 @@ class PdbIndex :
 
         # decide to print help message
         if len(sys.argv) < 3 :
-            # no enough arguements, exit now
+            # no enough arguments, exit now
             parser.print_help()
-            print("\nYou chose non of the arguement!\nDo nothing and exit now!\n")
+            print("\nYou chose non of the argument!\nDo nothing and exit now!\n")
             sys.exit(1)
 
         return(args)
@@ -237,7 +237,7 @@ class PdbIndex :
         initialize argument parser function.
         :return:
         '''
-        args = self.arguements()
+        args = self.arguments()
 
         if len(args.residueRange) == 2:
             residueNdx = range(args.residueRange[0], args.residueRange[-1] + 1)
